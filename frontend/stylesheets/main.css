@@ -1,0 +1,8 @@
+:root {
+	--color-background: #b5ccdd;/* blue */
+}
+
+body {
+	font-family: "Montserrat", sans-serif;
+  background: var(--color-background);
+}

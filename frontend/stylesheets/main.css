@@ -1,8 +1,17 @@
 :root {
-	--color-background: #b5ccdd;/* blue */
+  /* blue */
+  --color-background: #b5ccdd;
+}
+
+@font-face {
+  font-family: 'billabongregular';
+  src: url('fonts/billabongregular/billabong-webfont.woff2') format('woff2'),
+    url('fonts/billabongregular/billabong-webfont.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
 }
 
 body {
-	font-family: "Montserrat", sans-serif;
   background: var(--color-background);
+  font-family: "billabongregular";
 }

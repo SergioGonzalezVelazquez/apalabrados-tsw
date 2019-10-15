@@ -13,5 +13,13 @@
 
 body {
   background: var(--color-background);
-  font-family: "billabongregular";
+  /*font-family: "billabongregular";*/
+}
+
+.prueba{
+  background-color: #61d73d;
+}
+
+.prueba2 {
+  background-color: #6e36d5;
 }

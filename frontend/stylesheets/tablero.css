@@ -1,25 +1,59 @@
-.scrabble-table {
+/*.scrabble-table {
   border-collapse: separate;
   border-spacing: 0.5em;
   table-layout: fixed;
   background-clip: content-box;
-  min-width: 400px;
-  min-height: 400px;
+  width: 100%;
+  height: 100%;
+}
+*/
+.scrabble-table {
+ max-height: 40vh;
+}
+@media (min-width: 992px ) {
+  .scrabble-table {
+    border-collapse: separate;
+    border-spacing: 0.5em;
+    table-layout: fixed;
+    background-clip: content-box;
+    width: 100%;
+  }
+
+  .scrabble-td {
+    font-family: "Source Code Pro";
+    background-color: white;
+    padding: 1em;
+    height: 3.2vh;
+    width: 3.2vw;
+    font-size: 0.8vw;
+    text-align: center;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+  }
 }
 
-.scrabble-td {
-  font-family: "Source Code Pro";
-  color: rgba(0, 0, 0, 1);
-  background-color: white;
-  padding: 1.2em;
-  width: 2.096vw;
-  height: 2.096vw;
-  font-size: 0.8vw;
-  display: inline-block;
-  text-align: center;
-  -webkit-transition: all 0.3s ease-in-out;
-  transition: all 0.3s ease-in-out;
+@media (max-width: 992px) {
+  .scrabble-table {
+    border-collapse: separate;
+    border-spacing: 0.1em;
+    table-layout: fixed;
+    width: 100%;
+
+  }
+
+  .scrabble-td {
+    font-family: "Source Code Pro";
+    background-color: white;
+    padding: 1.2em;
+    min-height: 3vh;
+    min-width: 3vw;
+    font-size: 0.8vw;
+    text-align: center;
+    -webkit-transition: all 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
+  }
 }
+
 
 .double-word {
   background-color: #EE7C2F;
@@ -44,4 +78,14 @@
 .star {
   background-color: black;
   color: white;
+}
+
+.margenes{
+  padding: 1em;
+  margin: 1em;
+}
+
+.container-fluid{
+  padding: 0px;
+  margin: 0px;
 }

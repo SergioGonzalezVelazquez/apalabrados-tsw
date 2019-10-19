@@ -1,59 +1,72 @@
-/*.scrabble-table {
-  border-collapse: separate;
-  border-spacing: 0.5em;
-  table-layout: fixed;
-  background-clip: content-box;
-  width: 100%;
-  height: 100%;
+/*Sobreescribo la clase col para quitar el padding en tamaño pequeño*/
+.col-sm-12 {
+    padding-right: 0;
+    padding-left: 0;
+  }
+
+  /*Clase de pruebas creo que sobra, hay que revisar si cambia algo*/
+.margenes{
+  padding: 0em;
+  margin: 0em;
 }
-*/
+/*Sobreescribo la clase container-fluid ya que viene con margenes por defecto*/
+.container-fluid{
+  padding: 0px;
+  margin: 0px;
+}
+/*Atributos comunes para la clase tablero*/
 .scrabble-table {
- max-height: 40vh;
-}
-@media (min-width: 992px ) {
-  .scrabble-table {
-    border-collapse: separate;
-    border-spacing: 0.5em;
-    table-layout: fixed;
-    background-clip: content-box;
-    width: 100%;
-  }
+ /*max-height: 40vh;*/
+ border-collapse: separate;
+ table-layout: fixed;
+ background-clip: content-box;
 
-  .scrabble-td {
-    font-family: "Source Code Pro";
-    background-color: white;
-    padding: 1em;
-    height: 3.2vh;
-    width: 3.2vw;
-    font-size: 0.8vw;
-    text-align: center;
-    -webkit-transition: all 0.3s ease-in-out;
-    transition: all 0.3s ease-in-out;
-  }
+}
+/*Atributos comunes para la clase casilla*/
+.scrabble-td {
+  font-family: "Source Code Pro";
+  background-color: white;
+  text-align: center;
+  -webkit-transition: all 0.3s ease-in-out;
+  transition: all 0.3s ease-in-out;
+  border-radius: 0.1em;
+  font-size: 1em;
 }
 
-@media (max-width: 992px) {
+/*Media Query para tamaño móvil se ha usado el galaxy*/
+
+@media screen and (max-width: 360px) {
   .scrabble-table {
-    border-collapse: separate;
+    align:center;
+    height: 100vw;
+    width: 100vw;
+  }
+
+}
+/*Media Query para tamaño tablet, se ha usado kidle fire*/
+@media screen and (min-width: 360px) and (max-width: 805px) {
+  .scrabble-table {
     border-spacing: 0.1em;
-    table-layout: fixed;
-    width: 100%;
-
+    height: 100vw;
+    width: 100vw;
   }
-
   .scrabble-td {
-    font-family: "Source Code Pro";
-    background-color: white;
-    padding: 1.2em;
-    min-height: 3vh;
-    min-width: 3vw;
-    font-size: 0.8vw;
-    text-align: center;
-    -webkit-transition: all 0.3s ease-in-out;
-    transition: all 0.3s ease-in-out;
+    border-radius: 0.2em;
+
   }
 }
+/*Media Query para tamaños más grandes*/
+@media screen and (min-width: 805px) {
+  .scrabble-table {
+    border-spacing: 0.1em;
+    height: 90vh;
+    width: 90vh;
+  }
+  .scrabble-td {
+    border-radius: 0.2em;
 
+  }
+}
 
 .double-word {
   background-color: #EE7C2F;
@@ -78,14 +91,4 @@
 .star {
   background-color: black;
   color: white;
-}
-
-.margenes{
-  padding: 1em;
-  margin: 1em;
-}
-
-.container-fluid{
-  padding: 0px;
-  margin: 0px;
 }

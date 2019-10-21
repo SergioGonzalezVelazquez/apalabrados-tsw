@@ -1,8 +1,13 @@
 /*Sobreescribo la clase col para quitar el padding en tamaño pequeño*/
 .col-sm-12 {
     padding-right: 0;
-    padding-left: 0;
+  /*  padding-left: 0;*/
   }
+  /*Sobreescribo la clase col para quitar el padding en tamaño pequeño*/
+  .row-sm-12 {
+
+      margin-left: 0;
+    }
 
   /*Clase de pruebas creo que sobra, hay que revisar si cambia algo*/
 .margenes{

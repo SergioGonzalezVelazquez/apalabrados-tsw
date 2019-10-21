@@ -15,9 +15,16 @@
   <!--CSS-->
   <link rel="stylesheet" href="stylesheets/main.css" </head> <body>
   <link rel="stylesheet" href="stylesheets/tablero.css" </head> <body>
+  <link rel="stylesheet" href="stylesheets/shuffler.css" </head> <body>
+
 
   <!-- JQuery -->
-  <!--script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script-->
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!-- JS -->
+  <script type="application/javascript" src="js/shuffler.js"></script>
+
 </head>
 
 <body>
@@ -33,15 +40,39 @@
 
     <!-- CONTENEDOR GENERAL -->
 
-    <div class="row margenes">
+    <div class="row ">
 
       <!-- COLUMNA 1 DEL GRID -->
-      <div class="col-lg-4 col-sm-12">
-        Columna 1 grid
+
+      <!--  <h1>Scrabble shuffler</h1>-->
+      <div class="col-sm-12 col-lg-4">
+<div class="row-sm-12">
+
+
+        <div class="letters-wrapper">
+          <ul class="letters list-group">
+            <li><img src="assets/images/A.svg" alt="A"></li>
+            <li><img src="assets/images/B.svg" alt="B"></li>
+            <li><img src="assets/images/C.svg" alt="C"></li>
+            <li><img src="assets/images/D.svg" alt="D"></li>
+            <li><img src="assets/images/E.svg" alt="E"></li>
+            <li><img src="assets/images/F.svg" alt="F"></li>
+            <li><img src="assets/images/G.svg" alt="G"></li>
+            <li><img src="assets/images/H.svg" alt="H"></li>
+          </ul>
+        </div>
       </div>
+      <div class="row-sm-12 row-lg-4">
+        <p><a id='shuffle' class='btn btn-outline-primary'>Shuffle</a> <a id='restore' class='btn btn-outline-dark'>Restore</a></p>
+        <p id="output"></p>
+      </div>
+</div>
+
+
+
 
       <!-- COLUMNA 2 DEL GRID -->
-      <div class="col-lg-8 col-sm-12 ">
+      <div class="col-lg-6 col-sm-12 ">
         <!-- TABLERO -->
         <table id="board" class="scrabble-table mdl-shadow--24dp ">
           <tr>
@@ -305,5 +336,8 @@
   </div>
 
 </body>
+<!-- partial -->
+<script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+<script src="js/shuffler.js"></script>
 
 </html>

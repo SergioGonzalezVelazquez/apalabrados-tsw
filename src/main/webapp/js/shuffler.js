@@ -11,6 +11,9 @@ $("ul.letters li").css("float", "none").css("position", "absolute");
 
 $("ul.letters").css("height", "40px");
 $("ul.letters li").each(function() {
+  console.log($(this).attr('id'));
+  if($(this).attr('id') == undefined){
+    
   // One by one, create a position for each
   the_position = spacing + "px";
 
@@ -28,9 +31,10 @@ $("ul.letters li").each(function() {
 
   // Next letter, increase the count!
   count++;
-});
+}});
 
 $("#shuffle").click(function() {
+  
   // Duplicate array so we don't mess with the original here
   var shuffled_positions = positions.slice(0);
 
@@ -39,6 +43,7 @@ $("#shuffle").click(function() {
 
   // For each letter...
   $("ul.letters li").each(function() {
+    if($(this).attr('id') == undefined){
     // Animate
     $(this).animate({
       // The left distance, to the first element in the array
@@ -47,13 +52,15 @@ $("#shuffle").click(function() {
 
     // Remove the 'used' position from the array
     shuffled_positions.splice(0, 1);
-  });
+  }});
 });
 
 // When you click restore...
 $("#restore").click(function() {
+  
   // For each letter
   $("ul.letters li").each(function() {
+    if($(this).attr('id') == undefined){
     // Get its original position (set earlier and stored in the html)
     var pos = $(this).attr("data-origin");
     // Animate
@@ -61,7 +68,7 @@ $("#restore").click(function() {
       // It's left distance
       left: pos
     });
-  });
+  }});
 });
 
 //this is some cool algorithm that is recommended

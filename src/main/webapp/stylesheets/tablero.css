@@ -1,32 +1,36 @@
 /*Sobreescribo la clase col para quitar el padding en tamaño pequeño*/
 .col-sm-12 {
-    padding-right: 0;
+  padding-right: 0;
   /*  padding-left: 0;*/
-  }
-  /*Sobreescribo la clase col para quitar el padding en tamaño pequeño*/
-  .row-sm-12 {
+}
 
-      margin-left: 0;
-    }
+/*Sobreescribo la clase col para quitar el padding en tamaño pequeño*/
+.row-sm-12 {
 
-  /*Clase de pruebas creo que sobra, hay que revisar si cambia algo*/
-.margenes{
+  margin-left: 0;
+}
+
+/*Clase de pruebas creo que sobra, hay que revisar si cambia algo*/
+.margenes {
   padding: 0em;
   margin: 0em;
 }
+
 /*Sobreescribo la clase container-fluid ya que viene con margenes por defecto*/
-.container-fluid{
+.container-fluid {
   padding: 0px;
   margin: 0px;
 }
+
 /*Atributos comunes para la clase tablero*/
 .scrabble-table {
- /*max-height: 40vh;*/
- border-collapse: separate;
- table-layout: fixed;
- background-clip: content-box;
+  /*max-height: 40vh;*/
+  border-collapse: separate;
+  table-layout: fixed;
+  background-clip: content-box;
 
 }
+
 /*Atributos comunes para la clase casilla*/
 .scrabble-td {
   font-family: "Source Code Pro";
@@ -38,16 +42,49 @@
   font-size: 1em;
 }
 
+.player1-info {
+  width: 70%;
+  background-color: white;
+  border-style: solid;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-bottom-width: 15px;
+  border-left-style: none;
+  border-right-style: none;
+  color: #F15A29;
+}
+
+.player1-turn {
+  background-color:  #F15A29;
+  color: white;
+  font-weight: bold;
+}
+
+.player2-info {
+  width: 70%;
+  background-color: white;
+  border-style: solid;
+  border-top-style: solid;
+  border-bottom-style: solid;
+  border-bottom-width: 15px;
+  border-left-style: none;
+  border-right-style: none;
+  color: #1BB24B;
+}
+
+
+
 /*Media Query para tamaño móvil se ha usado el galaxy*/
 
 @media screen and (max-width: 360px) {
   .scrabble-table {
-    align:center;
+    align: center;
     height: 100vw;
     width: 100vw;
   }
 
 }
+
 /*Media Query para tamaño tablet, se ha usado kidle fire*/
 @media screen and (min-width: 360px) and (max-width: 805px) {
   .scrabble-table {
@@ -55,11 +92,13 @@
     height: 100vw;
     width: 100vw;
   }
+
   .scrabble-td {
     border-radius: 0.2em;
 
   }
 }
+
 /*Media Query para tamaños más grandes*/
 @media screen and (min-width: 805px) {
   .scrabble-table {
@@ -67,6 +106,7 @@
     height: 90vh;
     width: 90vh;
   }
+
   .scrabble-td {
     border-radius: 0.2em;
 

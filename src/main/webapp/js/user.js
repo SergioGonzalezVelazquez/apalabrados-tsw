@@ -48,7 +48,7 @@ function UserViewModel() {
 			data: info,
 			url: "login",
 			type: "post",
-			success: signInEmailOk,
+			success: loginOk,
 			error: error
 		};
 		$.ajax(data);
@@ -65,20 +65,14 @@ function UserViewModel() {
 			data: info,
 			url: "signup",
 			type: "post",
-			success: signUpOk,
+			success: loginOk,
 			error: error
 		};
 		$.ajax(data);
 	}
 
-	function signUpOk() {
-		$("#message").attr("style", "color:blue");
-		self.message("Register OK");
-	}
-
-	function signInEmailOk() {
-		$("#message").attr("style", "color:blue");
-		self.message("Login OK");
+	function loginOk() {
+		window.location = "http://localhost:8080/game.html";
 	}
 
 	function error(response) {

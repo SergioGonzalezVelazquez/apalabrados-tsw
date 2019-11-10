@@ -1,4 +1,4 @@
-package web.exceptions;
+package apalabrados.web.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;

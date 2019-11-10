@@ -1,8 +1,6 @@
 function UserViewModel() {
 	var self = this;
 
-	var show
-
 	//View controllers
 	this.showSignInForm = ko.observable(true);
 	this.showSignUpForm = ko.observable(false);
@@ -65,13 +63,27 @@ function UserViewModel() {
 			data: info,
 			url: "signup",
 			type: "post",
-			success: loginOk,
+			success: singupOK,
 			error: error
 		};
 		$.ajax(data);
 	}
 
-	function loginOk() {
+	function singupOK(response){
+		$("#message").attr("style", "color:green");
+		self.message("Registrado correctamente. ¡Inicia sesión y juega!");
+		self.changeViewToSignIn();
+	}
+
+	function loginOk(response) {
+		console.log("login OK")
+		console.log(response)
+		var user = {
+			"email": response.email,
+			"userName": response.userName,
+			"photo": response.photo
+		}
+		sessionStorage.setItem("user", JSON.stringify(user));
 		window.location = "http://localhost:8080/game.html";
 	}
 

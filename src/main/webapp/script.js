@@ -27,7 +27,7 @@ $('#board td').draggable({
 $('#board td').droppable({
 	
 	accept: function(dropedElement){
-		var newId="over"+$(this).attr("id");
+		var newId="over"+$(this).attr("id").replace(',', '\\,');
 		// Comprueba si existe una pieza en esa posición
 		// falta revisar si existe la posición no está pillando el elemento por id
 		if($("#" + newId).length == 0 && dropedElement.attr('class').search("played") == -1){

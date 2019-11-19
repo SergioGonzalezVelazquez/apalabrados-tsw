@@ -6,7 +6,6 @@
 
 /*Sobreescribo la clase col para quitar el padding en tamaño pequeño*/
 .row-sm-12 {
-
   margin-left: 0;
 }
 

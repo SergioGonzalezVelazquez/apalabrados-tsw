@@ -1,8 +1,9 @@
 function GameViewModel(user) {
     var self = this;
+    self.ws = null;
 
-    //General
-    this.readyMatch = ko.observable(false);
+    //General: controlling hide & show tablero and isLoading animation
+    this.shouldShowBoard = ko.observable(false);
     this.isLoading = ko.observable(false);
 
     //User (Player 1) properties
@@ -19,6 +20,12 @@ function GameViewModel(user) {
     this.p2LetterImg = ko.observable();
     this.p2LetterTxt = ko.observable();
     this.p2Score = ko.observable();
+    this.p2Turn = ko.observable();
+
+
+    //Board
+    this.tablero = ko.observable(new Tablero(ko));
+
 
 
     //Letters
@@ -141,14 +148,15 @@ function GameViewModel(user) {
                     console.log(jso.mensaje);
                 } else if (jso.type == "START") {
                     console.log("start")
-                    self.readyMatch(true);
+                    self.shouldShowBoard(true);
                     self.isLoading(false);
                     self.p1Turn(jso.turn);
+                    self.p2Turn(!jso.turn);
                     self.p2Name(jso.opponent);
                     self.p2LetterImg("assets/images/" + jso.opponent.charAt(0).toUpperCase() + ".svg");
                     self.p2LetterTxt(jso.opponent.charAt(0).toUpperCase());
                     console.log((jso.turn ? "Tienes " : "No tienes") + " el turno. Tus letras son: " + jso.letters);
-                    
+
                     //Binding letters
                     var letters = jso.letters.split(' ');
                     self.l1Img("assets/images/" + letters[0].toUpperCase() + ".svg");
@@ -172,7 +180,140 @@ function GameViewModel(user) {
         }
     }
 
+
+
+    //Panel de botones: JUGAR
+    this.jugar = function () {}
+
+    //Panel de botones: JUGAR
+    this.pasar = function () {}
+
+    //Panel de botones: CAMBIAR
+    this.cambiar = function () {}
+
 }
+
+
+class Tablero {
+    constructor(ko) {
+        this.casillasNoKO = new Array();
+
+        for (var i = 0; i < 15; i++) {
+            this.casillasNoKO.push(new Array());
+            for (var j = 0; j < 15; j++)
+                this.casillasNoKO[i][j] = new Casilla(ko, this, i, j);
+        }
+
+        var tp = [
+            [0, 2],
+            [0, 12],
+            [2, 0],
+            [2, 14],
+            [12, 0],
+            [12, 14],
+            [14, 2],
+            [14, 12]
+        ];
+        for (var i = 0; i < tp.length; i++) {
+            var coords = tp[i];
+            this.casillasNoKO[coords[0]][coords[1]].label("TP");
+            this.casillasNoKO[coords[0]][coords[1]].clazz("scrabble-td triple-word");
+        }
+        tp = [
+            [0, 4],
+            [0, 10],
+            [1, 1],
+            [1, 13],
+            [2, 6],
+            [2, 8],
+            [3, 3],
+            [3, 11],
+            [4, 0],
+            [4, 14],
+            [5, 5],
+            [5, 9],
+            [6, 2],
+            [6, 12],
+            [8, 2],
+            [8, 12],
+            [9, 5],
+            [9, 9],
+            [10, 0],
+            [10, 14],
+            [11, 3],
+            [11, 11],
+            [12, 6],
+            [12, 8],
+            [13, 1],
+            [13, 13],
+            [14, 4],
+            [14, 10]
+        ];
+        for (var i = 0; i < tp.length; i++) {
+            var coords = tp[i];
+            this.casillasNoKO[coords[0]][coords[1]].label("TL");
+            this.casillasNoKO[coords[0]][coords[1]].clazz("scrabble-td triple-letter");
+        }
+        tp = [
+            [1, 5],
+            [1, 9],
+            [3, 7],
+            [5, 1],
+            [5, 13],
+            [7, 3],
+            [7, 11],
+            [9, 1],
+            [9, 13],
+            [11, 7],
+            [13, 5],
+            [13, 9]
+        ];
+        for (var i = 0; i < tp.length; i++) {
+            var coords = tp[i];
+            this.casillasNoKO[coords[0]][coords[1]].label("DP");
+            this.casillasNoKO[coords[0]][coords[1]].clazz("scrabble-td double-word");
+        }
+        tp = [
+            [2, 2],
+            [2, 12],
+            [4, 6],
+            [4, 8],
+            [6, 4],
+            [6, 10],
+            [8, 4],
+            [8, 10],
+            [10, 6],
+            [10, 8],
+            [12, 2],
+            [12, 12]
+        ];
+        for (var i = 0; i < tp.length; i++) {
+            var coords = tp[i];
+            this.casillasNoKO[coords[0]][coords[1]].label("DL");
+            this.casillasNoKO[coords[0]][coords[1]].clazz("scrabble-td double-letter");
+        }
+
+
+        this.casillasNoKO[7][7].label("★");
+        this.casillasNoKO[7][7].clazz("scrabble-td star");
+        this.casillas = ko.observableArray(this.casillasNoKO);
+        this.casillasJugada = [];
+        this.panel = ko.observableArray(['A', 'B', 'C']);
+        this.casillaSeleccionada = null;
+    }
+}
+
+class Casilla {
+    constructor(ko, tablero, row, column) {
+        this.tablero = tablero;
+        this.label = ko.observable('');
+        this.letter = ko.observable('');
+        this.clazz = ko.observable("scrabble-td");
+        this.row = row;
+        this.column = column;
+    }
+}
+
 
 //initializeNavbar();
 user = sessionStorage.getItem('user')

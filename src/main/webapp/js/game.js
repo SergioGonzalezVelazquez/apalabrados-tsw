@@ -7,6 +7,9 @@ function GameViewModel(user) {
     this.isLoading = ko.observable(false);
 
     //User (Player 1) properties
+    this.player1 = ko.observable(new Player(ko, user.userName, user.email, user.photo));
+
+    /*
     this.userEmail = ko.observable(user.email);
     this.userName = ko.observable(user.userName);
     this.userPhoto = ko.observable(user.photo ? user.photo : "assets/images/default-user-icon.jpg");
@@ -14,20 +17,113 @@ function GameViewModel(user) {
     this.p1Score = ko.observable();
     this.p1LetterImg = ko.observable("assets/images/" + user.userName.charAt(0).toUpperCase() + ".svg");
     this.p1LetterTxt = ko.observable(user.userName.charAt(0).toUpperCase());
+    */
 
     //Player 2 properties
+    this.player2 = ko.observable(new Player(ko));
+    /*
     this.p2Name = ko.observable();
     this.p2LetterImg = ko.observable();
     this.p2LetterTxt = ko.observable();
     this.p2Score = ko.observable();
     this.p2Turn = ko.observable();
+    */
 
 
-    //Board
+    //Tablero
     this.tablero = ko.observable(new Tablero(ko));
 
+    //Dragging, Dropping, and Sorting With observableArrays
+    //http://www.knockmeout.net/2011/05/dragging-dropping-and-sorting-with.html
+    //Sortable list
+    /*
+    ko.bindingHandlers.sortableList = {
+        init: function (element, valueAccessor) {
+            var list = valueAccessor();
+            $(element).sortable({
+                update: function (event, ui) {
+                    //retrieve our actual data item
+                    var item = ui.item.tmplItem().data;
+                    //figure out its new position
+                    var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                    //remove the item and add it back in the right spot
+                    if (position >= 0) {
+                        list.remove(item);
+                        list.splice(position, 0, item);
+                    }
+                }
+            });
+        }
+    };
+    */
+
+    //Draggable element
+    ko.bindingHandlers.draggable = {
+        init: function (element, valueAccessor, allBindings, data, bindingContext) {
+            $(element).draggable({
+                revert: "invalid",
+                snap: ".scrabble-td"
+                //grid: [40,40]
+            });
+        }
+    };
+
+    //Droppable element
+    ko.bindingHandlers.droppable = {
+        init: function (element, valueAccessor, allBindings, data, bindingContext) {
+            $(element).droppable({
+
+                accept: function (dropedElement) {
+                    console.log("accept")
+                    //console.log(bindingContext.$data)
+                    return true;
+                },
+
+                drop: function (event, ui) {
+
+                    console.log("Has soltado la letra en ")
+                    console.log(bindingContext.$data)
 
 
+                },
+            });
+        }
+    };
+
+
+    /*
+    //Draggable element
+    ko.bindingHandlers.draggable = {
+        init: function (element, valueAccessor) {
+            var dragElement = $(element);
+            var dragOptions = {
+                helper: 'clone',
+                revert: true,
+                revertDuration: 0,
+                start: function () {
+                    _dragged = ko.utils.unwrapObservable(valueAccessor().value);
+                },
+                cursor: 'default'
+            };
+            dragElement.draggable(dragOptions).disableSelection();
+            console.log("draggable")
+        }
+    };
+
+    //Droppable element
+    ko.bindingHandlers.droppable = {
+        init: function (element, valueAccessor) {
+            var dropElement = $(element);
+            var dropOptions = {
+                drop: function (event, ui) {
+                    valueAccessor().value(_dragged);
+                }
+            };
+            dropElement.droppable(dropOptions);
+            console.log("droppable")
+        }
+    };
+    */
     //Letters
     this.l1Img = ko.observable();
     this.l2Img = ko.observable();
@@ -150,11 +246,20 @@ function GameViewModel(user) {
                     console.log("start")
                     self.shouldShowBoard(true);
                     self.isLoading(false);
+                    /*
                     self.p1Turn(jso.turn);
                     self.p2Turn(!jso.turn);
                     self.p2Name(jso.opponent);
                     self.p2LetterImg("assets/images/" + jso.opponent.charAt(0).toUpperCase() + ".svg");
                     self.p2LetterTxt(jso.opponent.charAt(0).toUpperCase());
+                    */
+                    console.log(jso)
+                    self.player1().turn(jso.Turn)
+                    self.player2().turn(!jso.turn);
+                    self.player2().name(jso.opponent);
+                    self.player2().letterImg("assets/images/" + jso.opponent.charAt(0).toUpperCase() + ".svg");
+                    self.player2().letterTxt(jso.opponent.charAt(0).toUpperCase());
+
                     console.log((jso.turn ? "Tienes " : "No tienes") + " el turno. Tus letras son: " + jso.letters);
 
                     //Binding letters
@@ -194,8 +299,56 @@ function GameViewModel(user) {
 }
 
 
+/**
+ * 
+ */
+class Player {
+
+    /**
+     * Constructor de la clase Player
+     * @param ko 
+     * @param name 
+     * @param email 
+     * @param photo 
+     */
+    constructor(ko, name = null, email = null, photo = null) {
+        if (name) {
+            this.name = ko.observable(name);
+            this.letterImg = ko.observable("assets/images/" + name.charAt(0).toUpperCase() + ".svg");
+            this.letterTxt = ko.observable(name.charAt(0).toUpperCase());
+        } else {
+            this.name = ko.observable();
+            this.letterImg = ko.observable();
+            this.letterTxt = ko.observable();
+        }
+
+        this.score = ko.observable(0);
+        this.turn = ko.observable(false);
+        this.email = (email ? ko.observable(email) : ko.observable());
+        this.photo = ko.observable(photo ? photo : "assets/images/default-user-icon.jpg");
+    }
+
+    setTurn(turn) {
+        this.turn = turn;
+        console.log("turno definido")
+    }
+
+    setName(name) {
+        this.name = name;
+        this.letterImg = ko.observable("assets/images/" + name.charAt(0).toUpperCase() + ".svg");
+        this.letterTxt = ko.observable(name.charAt(0).toUpperCase());
+        console.log("name cambiado A " + name)
+    }
+}
+
+/**
+ * Clase Tablero
+ * 
+ */
 class Tablero {
     constructor(ko) {
+
+        //Construir tablero
         this.casillasNoKO = new Array();
 
         for (var i = 0; i < 15; i++) {
@@ -204,6 +357,7 @@ class Tablero {
                 this.casillasNoKO[i][j] = new Casilla(ko, this, i, j);
         }
 
+        //Asignar casillas "Triple valor de palabra"
         var tp = [
             [0, 2],
             [0, 12],
@@ -219,7 +373,9 @@ class Tablero {
             this.casillasNoKO[coords[0]][coords[1]].label("TP");
             this.casillasNoKO[coords[0]][coords[1]].clazz("scrabble-td triple-word");
         }
-        tp = [
+
+        //Asignar casillas "Triple valor de letra"
+        var tl = [
             [0, 4],
             [0, 10],
             [1, 1],
@@ -249,12 +405,14 @@ class Tablero {
             [14, 4],
             [14, 10]
         ];
-        for (var i = 0; i < tp.length; i++) {
-            var coords = tp[i];
+        for (var i = 0; i < tl.length; i++) {
+            var coords = tl[i];
             this.casillasNoKO[coords[0]][coords[1]].label("TL");
             this.casillasNoKO[coords[0]][coords[1]].clazz("scrabble-td triple-letter");
         }
-        tp = [
+
+        //Asignar casillas "Doble valor de palabra"
+        var dp = [
             [1, 5],
             [1, 9],
             [3, 7],
@@ -268,12 +426,14 @@ class Tablero {
             [13, 5],
             [13, 9]
         ];
-        for (var i = 0; i < tp.length; i++) {
-            var coords = tp[i];
+        for (var i = 0; i < dp.length; i++) {
+            var coords = dp[i];
             this.casillasNoKO[coords[0]][coords[1]].label("DP");
             this.casillasNoKO[coords[0]][coords[1]].clazz("scrabble-td double-word");
         }
-        tp = [
+
+        //Asignar casillas "Doble valor de letra"
+        var dl = [
             [2, 2],
             [2, 12],
             [4, 6],
@@ -287,22 +447,28 @@ class Tablero {
             [12, 2],
             [12, 12]
         ];
-        for (var i = 0; i < tp.length; i++) {
-            var coords = tp[i];
+        for (var i = 0; i < dl.length; i++) {
+            var coords = dl[i];
             this.casillasNoKO[coords[0]][coords[1]].label("DL");
             this.casillasNoKO[coords[0]][coords[1]].clazz("scrabble-td double-letter");
         }
 
-
+        //Casilla central
         this.casillasNoKO[7][7].label("★");
         this.casillasNoKO[7][7].clazz("scrabble-td star");
+
+        //Convertir array de casillas en observable
         this.casillas = ko.observableArray(this.casillasNoKO);
-        this.casillasJugada = [];
-        this.panel = ko.observableArray(['A', 'B', 'C']);
-        this.casillaSeleccionada = null;
+        this.casillasJugadas = [];
+
+        //Panel de letras, inicialmente vacío
+        this.panel = ko.observableArray(['S', 'T', 'I', 'N', 'A', 'C', 'T']);
     }
 }
 
+/**
+ * Clase Casilla
+ */
 class Casilla {
     constructor(ko, tablero, row, column) {
         this.tablero = tablero;

@@ -81,9 +81,17 @@
   display: block;
 }
 
+.letters {
+  display: flex;
+  /*-ms-flex-direction: column;*/
+  /*flex-direction: column;*/
+  padding-left: 0;
+  /*height: 40px;*/
+  margin-bottom: 0;
+}
+
 .letters li {
-  margin-left: auto;
-  margin-right: auto;
+  margin-right: 10px;
   display: block;
   width: 40px;
   height: 40px;
@@ -109,7 +117,8 @@
 
 .log-list {
   padding: 0;
-  max-height: 5em; /* 1.25 x 4 */
+  max-height: 5em;
+  /* 1.25 x 4 */
   overflow-y: auto;
 }
 
@@ -197,6 +206,7 @@
 
 
 }
+
 .circle {
   margin: 0 auto;
   border-radius: 50%;
@@ -204,19 +214,34 @@
   border-top-color: #347fc3;
 }
 
-.circle1-1, .circle1-2, .circle1-3, .circle1-4, .circle1-5, .circle1-6 {
+.circle1-1,
+.circle1-2,
+.circle1-3,
+.circle1-4,
+.circle1-5,
+.circle1-6 {
   height: 100px;
   width: 100px;
   margin-top: 15px;
 }
 
-.circle2-1, .circle2-2, .circle2-3, .circle2-4, .circle2-5, .circle2-6 {
+.circle2-1,
+.circle2-2,
+.circle2-3,
+.circle2-4,
+.circle2-5,
+.circle2-6 {
   height: 70px;
   width: 70px;
   margin-top: 5px;
 }
 
-.circle3-1, .circle3-2, .circle3-3, .circle3-4, .circle3-5, .circle3-6 {
+.circle3-1,
+.circle3-2,
+.circle3-3,
+.circle3-4,
+.circle3-5,
+.circle3-6 {
   height: 40px;
   width: 40px;
   margin-top: 5px;
@@ -227,10 +252,11 @@
 }
 
 @-webkit-keyframes load1 {
-  0% {
-  }
+  0% {}
+
   100% {
     -webkit-transform: rotate(360deg);
   }
 }
+
 /* END Data Loader Animation */

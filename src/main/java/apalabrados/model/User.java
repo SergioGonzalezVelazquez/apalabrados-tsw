@@ -8,11 +8,13 @@ import javax.persistence.Id;
 import javax.persistence.Transient;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+
 
 @Entity
 public class User {
@@ -67,8 +69,17 @@ public class User {
 		this.session=session;
 	}
 
-	public void sendMessage(String msg) throws IOException, JSONException {
+	public void sendMessage(String msg) throws IOException {
 		WebSocketMessage<?> message = new TextMessage(msg);
 		this.session.sendMessage(message);
+	}
+
+	public WebSocketSession getSession() {
+		return this.session;
+	}
+
+	public void sendMessage(MovementResult resultado) throws Exception {
+		JSONObject jso = resultado.toJSON();
+		this.session.sendMessage(new TextMessage(jso.toString()));
 	}
 }

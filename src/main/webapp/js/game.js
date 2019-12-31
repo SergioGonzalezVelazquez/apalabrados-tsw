@@ -5,33 +5,82 @@ function GameViewModel(user) {
     //General: controlling hide & show tablero and isLoading animation
     this.shouldShowBoard = ko.observable(false);
     this.isLoading = ko.observable(false);
+    this.visiblePopup = ko.observable(false);
+
+    this.popupOptions = {
+        width: 300,
+        height: 250,
+        contentTemplate: "info",
+        showTitle: true,
+        title: "Information",
+        visible: this.visiblePopup,
+        dragEnabled: false,
+        closeOnOutsideClick: true
+    };
+
 
     //User (Player 1) properties
     this.player1 = ko.observable(new Player(ko, user.userName, user.email, user.photo));
 
-    /*
-    this.userEmail = ko.observable(user.email);
-    this.userName = ko.observable(user.userName);
-    this.userPhoto = ko.observable(user.photo ? user.photo : "assets/images/default-user-icon.jpg");
-    this.p1Turn = ko.observable();
-    this.p1Score = ko.observable();
-    this.p1LetterImg = ko.observable("assets/images/" + user.userName.charAt(0).toUpperCase() + ".svg");
-    this.p1LetterTxt = ko.observable(user.userName.charAt(0).toUpperCase());
-    */
-
     //Player 2 properties
     this.player2 = ko.observable(new Player(ko));
-    /*
-    this.p2Name = ko.observable();
-    this.p2LetterImg = ko.observable();
-    this.p2LetterTxt = ko.observable();
-    this.p2Score = ko.observable();
-    this.p2Turn = ko.observable();
-    */
-
 
     //Tablero
     this.tablero = ko.observable(new Tablero(ko));
+
+    //Controller for Popups
+    this.shouldShowPopup = ko.observable(false);
+
+
+    //Movement history. Initially an empty array
+    this.movementHistory = ko.observableArray();
+
+
+    //Timer.
+    //https://stackoverflow.com/questions/22080400/hours-minutes-seconds-knockout-countdown-timer
+    self.timer = ko.observable(120);
+
+    self.minutes = ko.computed(function () {
+        return Math.floor(self.timer() / 60) % 60;
+    }, self);
+
+    self.seconds = ko.computed(function () {
+        return addZero(self.timer() % 60);
+    }, self);
+
+
+    var timerController = null;
+    var countdown = function () {
+        timerController = setInterval(function () {
+            console.log("setInterval " + self.timer)
+            var newTimer = self.timer() - 1;
+
+            if (newTimer < 0) {
+                self.timer(120);
+                self.stopCountdown();
+                console.log("Temporizador out")
+
+                return 0;
+            } else {
+                self.timer(newTimer);
+            }
+        }, 1000);
+    }
+
+    this.launchCountdown = function () {
+        console.log("launchCountdown")
+        self.timer(120);
+        countdown();
+    }
+
+    this.stopCountdown = function () {
+        console.log("stop interval")
+        self.timer(120);
+        clearInterval(timerController);
+        timerController = null;
+    }
+    //End of timer
+
 
     //Dragging, Dropping, and Sorting With observableArrays
     //http://www.knockmeout.net/2011/05/dragging-dropping-and-sorting-with.html
@@ -74,71 +123,33 @@ function GameViewModel(user) {
             $(element).droppable({
 
                 accept: function (dropedElement) {
-                    console.log("accept")
                     //console.log(bindingContext.$data)
                     return true;
                 },
 
                 drop: function (event, ui) {
+                    ui.draggable.removeClass('onboard');
+                    ui.draggable.toggleClass('onboard');
 
-                    console.log("Has soltado la letra en ")
-                    console.log(bindingContext.$data)
+                    //data: objeto Casilla sobre el que se suelta la ficha
+                    //element: elemento HTML sobre el que se suelta la ficha (td)
+
+                    //Para obtener la letra que se ha soltado sobre el tablero, utilizo event.toElement, con
+                    //el que se tiene acceso a la imagen de la letra. A partir de ahí, proceso el atributo src
+                    //para obtener la letra. 
+                    var letter = event.toElement.src.split("/");
+                    letter = letter[letter.length - 1].split(".")[0];
 
 
+                    console.log("Has soltado la letra " + letter + " en fila:" + data.row + ", col:" + data.column)
+                    data.letter = letter;
+                    console.log(data);
+                    self.tablero().casillasJugadas().push(data);
+                    console.log("casillas jugadas: " + self.tablero().casillasJugadas().length);
                 },
             });
         }
     };
-
-
-    /*
-    //Draggable element
-    ko.bindingHandlers.draggable = {
-        init: function (element, valueAccessor) {
-            var dragElement = $(element);
-            var dragOptions = {
-                helper: 'clone',
-                revert: true,
-                revertDuration: 0,
-                start: function () {
-                    _dragged = ko.utils.unwrapObservable(valueAccessor().value);
-                },
-                cursor: 'default'
-            };
-            dragElement.draggable(dragOptions).disableSelection();
-            console.log("draggable")
-        }
-    };
-
-    //Droppable element
-    ko.bindingHandlers.droppable = {
-        init: function (element, valueAccessor) {
-            var dropElement = $(element);
-            var dropOptions = {
-                drop: function (event, ui) {
-                    valueAccessor().value(_dragged);
-                }
-            };
-            dropElement.droppable(dropOptions);
-            console.log("droppable")
-        }
-    };
-    */
-    //Letters
-    this.l1Img = ko.observable();
-    this.l2Img = ko.observable();
-    this.l3Img = ko.observable();
-    this.l4Img = ko.observable();
-    this.l5Img = ko.observable();
-    this.l6Img = ko.observable();
-    this.l7Img = ko.observable();
-    this.l1Txt = ko.observable();
-    this.l2Txt = ko.observable();
-    this.l3Txt = ko.observable();
-    this.l4Txt = ko.observable();
-    this.l5Txt = ko.observable();
-    this.l6Txt = ko.observable();
-    this.l7Txt = ko.observable();
 
     //Loading circle code
     var displayValue = function (element, valueAccessor) {
@@ -217,81 +228,164 @@ function GameViewModel(user) {
     }
 
     function gameOK(response) {
-        var ws = new WebSocket("ws://localhost:8080/wsServer");
-        ws.onopen = function (event) {
-            response = JSON.parse(response);
+        self.ws = new WebSocket("ws://localhost:8080/wsServer");
+        response = JSON.parse(response);
+
+        //Guardar id partida en sessionStorage
+        if (response.idPartida)
+            sessionStorage.idPartida = response.idPartida;
+
+        self.ws.onopen = function (event) {
             console.log(response.type)
             if (response.type == "PARTIDA LISTA") {
                 var mensaje = {
                     type: "INICIAR PARTIDA",
                     idPartida: response.idPartida
                 };
-                ws.send(JSON.stringify(mensaje));
+                self.ws.send(JSON.stringify(mensaje));
             }
-            ws.onerror = function (event) {
-                console.log("on error");
-            }
-            ws.onclose = function (event) {
-                console.log("on close");
-            }
-            ws.onmessage = function (event) {
+        }
+        self.ws.onerror = function (event) {
+            console.log("on error");
+        }
+        self.ws.onclose = function (event) {
+            console.log("on close");
+        }
+        self.ws.onmessage = function (event) {
 
-                var jso = event.data;
-                jso = JSON.parse(jso);
-                console.log("Mensaje recibido de tipo: " + jso.type);
+            var jso = event.data;
+            jso = JSON.parse(jso);
+            console.log("Mensaje recibido del tipo: " + jso.type);
+            console.log(JSON.stringify(jso))
 
-                if (jso.type == "TEXTO") {
-                    console.log(jso.mensaje);
-                } else if (jso.type == "START") {
-                    console.log("start")
-                    self.shouldShowBoard(true);
-                    self.isLoading(false);
-                    /*
-                    self.p1Turn(jso.turn);
-                    self.p2Turn(!jso.turn);
-                    self.p2Name(jso.opponent);
-                    self.p2LetterImg("assets/images/" + jso.opponent.charAt(0).toUpperCase() + ".svg");
-                    self.p2LetterTxt(jso.opponent.charAt(0).toUpperCase());
-                    */
-                    console.log(jso)
-                    self.player1().turn(jso.Turn)
-                    self.player2().turn(!jso.turn);
-                    self.player2().name(jso.opponent);
-                    self.player2().letterImg("assets/images/" + jso.opponent.charAt(0).toUpperCase() + ".svg");
-                    self.player2().letterTxt(jso.opponent.charAt(0).toUpperCase());
+            if (jso.type == "TEXTO") {
+                console.log(jso.mensaje);
+            } else if (jso.type == "START") {
+                console.log("start")
+                self.shouldShowBoard(true);
+                self.isLoading(false);
+                console.log("JSON:")
+                console.log(JSON.stringify(jso))
+                self.player1().turn(jso.turn)
+                self.player2().turn(!jso.turn);
+                self.player2().name(jso.opponent);
+                self.player2().letterImg("assets/images/" + jso.opponent.charAt(0).toUpperCase() + ".svg");
+                self.player2().letterTxt(jso.opponent.charAt(0).toUpperCase());
 
-                    console.log((jso.turn ? "Tienes " : "No tienes") + " el turno. Tus letras son: " + jso.letters);
-
-                    //Binding letters
-                    var letters = jso.letters.split(' ');
-                    self.l1Img("assets/images/" + letters[0].toUpperCase() + ".svg");
-                    self.l2Img("assets/images/" + letters[1].toUpperCase() + ".svg");
-                    self.l3Img("assets/images/" + letters[2].toUpperCase() + ".svg");
-                    self.l4Img("assets/images/" + letters[3].toUpperCase() + ".svg");
-                    self.l5Img("assets/images/" + letters[4].toUpperCase() + ".svg");
-                    self.l6Img("assets/images/" + letters[5].toUpperCase() + ".svg");
-                    self.l7Img("assets/images/" + letters[6].toUpperCase() + ".svg");
-
-                    self.l1Txt(letters[0].toUpperCase());
-                    self.l2Txt(letters[1].toUpperCase());
-                    self.l3Txt(letters[2].toUpperCase());
-                    self.l4Txt(letters[3].toUpperCase());
-                    self.l5Txt(letters[4].toUpperCase());
-                    self.l6Txt(letters[5].toUpperCase());
-                    self.l7Txt(letters[6].toUpperCase());
+                //Binding letters
+                var letters = jso.letters.split(' ');
+                console.log(jso.letters)
+                for (var i = 0; i < letters.length; i++) {
+                    self.tablero().panel.push(letters[i]);
                 }
+
+                //Iniciar temporizador
+                if (jso.turn) {
+                    self.launchCountdown();
+                    console.log("contador iniciado on start")
+                }
+                console.log(self.tablero().panel)
+
+
+            } else if (jso.type == "MOVEMENT") {
+                console.log("movement")
+                if (jso.exceptions > 0) {
+
+                } else {
+                    self.player1().turn(false);
+                    self.player2().turn(true);
+                    self.player1().score(jso.score);
+                    self.tablero().fichasRestantes(jso.availablePieces);
+                    if (jso.movements.length > 0) {
+
+                    } else {
+                        console.log(self.player1().name())
+                        var timestamp = new Date();
+                        self.movementHistory.unshift("[" + addZero(timestamp.getHours()) + ":" + addZero(timestamp.getMinutes()) + ":" +
+                            addZero(timestamp.getSeconds()) + "]\t" + self.player1().name() + " pasó su turno sin movimientos");
+                    }
+
+                    //Stop timer
+                    self.stopCountdown();
+                }
+
+            }
+
+            //El jugador rival ha hecho un movimiento
+            else if (jso.type == "OPPONENT_MOVEMENT") {
+                console.log("opponent_movement")
+                if (jso.exceptions > 0) {
+
+                } else {
+                    self.player1().turn(true);
+                    self.player2().turn(false);
+                    self.player2().score(jso.score);
+                    self.tablero().fichasRestantes(jso.availablePieces);
+                    if (jso.movements.length > 0) {
+
+                    } else {
+                        var timestamp = new Date();
+                        self.movementHistory.unshift("[" + addZero(timestamp.getHours()) + ":" + addZero(timestamp.getMinutes()) + ":" +
+                            addZero(timestamp.getSeconds()) + "]\t" + self.player2().name() + " pasó su turno sin movimientos");
+                    }
+                }
+
+                //Launch timer
+                self.launchCountdown();
 
             }
         }
     }
 
+    /**
+     * Panel de botones: JUGAR
+     */
+    this.jugar = function () {
+        if (self.player1().turn) {
+            if (self.tablero().casillasJugadas().length > 0) {
+                var mensaje = {
+                    type: "MOVIMIENTO",
+                    idPartida: sessionStorage.getItem('idPartida'),
+                    jugada: []
+                };
 
+                self.tablero().casillasJugadas().forEach(function (element) {
+                    var casilla = {
+                        row: element.row,
+                        column: element.column,
+                        letter: element.letter,
+                    }
+                    mensaje['jugada'].push(casilla);
+                });
+                self.ws.send(JSON.stringify(mensaje));
+
+                console.log("Jugar")
+                console.log(self.tablero().casillasJugadas())
+            } else {
+                //Error
+                self.showLoserModal();
+                console.log("no hay jugadas")
+            }
+
+        } else {
+            console.log("no tienes el turno")
+        }
+
+    }
 
     //Panel de botones: JUGAR
-    this.jugar = function () {}
+    this.pasar = function () {
+        if (self.player1().turn) {
+            var mensaje = {
+                type: "PASO_TURNO",
+                idPartida: sessionStorage.getItem('idPartida'),
+            };
+            self.ws.send(JSON.stringify(mensaje));
 
-    //Panel de botones: JUGAR
-    this.pasar = function () {}
+        } else {
+            console.log("no tienes el turno")
+        }
+    }
 
     //Panel de botones: CAMBIAR
     this.cambiar = function () {}
@@ -323,21 +417,9 @@ class Player {
         }
 
         this.score = ko.observable(0);
-        this.turn = ko.observable(false);
+        this.turn = ko.observable();
         this.email = (email ? ko.observable(email) : ko.observable());
         this.photo = ko.observable(photo ? photo : "assets/images/default-user-icon.jpg");
-    }
-
-    setTurn(turn) {
-        this.turn = turn;
-        console.log("turno definido")
-    }
-
-    setName(name) {
-        this.name = name;
-        this.letterImg = ko.observable("assets/images/" + name.charAt(0).toUpperCase() + ".svg");
-        this.letterTxt = ko.observable(name.charAt(0).toUpperCase());
-        console.log("name cambiado A " + name)
     }
 }
 
@@ -459,10 +541,13 @@ class Tablero {
 
         //Convertir array de casillas en observable
         this.casillas = ko.observableArray(this.casillasNoKO);
-        this.casillasJugadas = [];
+        this.casillasJugadas = ko.observableArray();
 
         //Panel de letras, inicialmente vacío
-        this.panel = ko.observableArray(['S', 'T', 'I', 'N', 'A', 'C', 'T']);
+        this.panel = ko.observableArray([]);
+
+        //Fichas disponibles en el servidor
+        this.fichasRestantes = ko.observable(0);
     }
 }
 
@@ -473,7 +558,7 @@ class Casilla {
     constructor(ko, tablero, row, column) {
         this.tablero = tablero;
         this.label = ko.observable('');
-        this.letter = ko.observable('');
+        this.letter = '';
         this.clazz = ko.observable("scrabble-td");
         this.row = row;
         this.column = column;
@@ -488,4 +573,15 @@ if (!user) {
 } else {
     var game = new GameViewModel(JSON.parse(user));
     ko.applyBindings(game);
+}
+
+
+/**
+ * UTILS
+ */
+function addZero(i) {
+    if (i < 10) {
+        i = "0" + i;
+    }
+    return i;
 }

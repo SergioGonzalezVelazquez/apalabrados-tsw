@@ -58,6 +58,10 @@
   font-weight: bold;
 }
 
+.timer{
+  font-size: 2em;
+}
+
 .player2-info {
   background-color: white;
   border-style: solid;

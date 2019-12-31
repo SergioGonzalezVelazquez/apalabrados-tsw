@@ -24,34 +24,33 @@ public class WSServer extends TextWebSocketHandler {
 		sessionsById.put(session.getId(), session);
 		User user = (User) session.getAttributes().get("user");
 		user.setWebSocketSession(session);
-		
-		
-		/* Player player = (Player) session.getAttributes().get("player");
-		String userName=player.getUserName();
-		if (sessionsByUser.get(userName)!=null) 
-			sessionsByUser.remove(userName);
-		sessionsByUser.put(userName, session);
-		System.out.println(userName);*/
 	}
+	
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
+		
 		System.out.println(message.getPayload());
 		JSONObject jso=new JSONObject(message.getPayload());
 		String type = jso.getString("type");
+		String idPartida = jso.getString("idPartida");
+		Match match =  WebController.inPlayMatches.get(idPartida);
+		
 		switch(type) {
 		case "INICIAR PARTIDA":
-			String idPartida = jso.getString("idPartida");
-			Match match = WebController.inPlayMatches.get(idPartida);
 			match.start();
 			break;
 		
 		case "MOVIMIENTO": //el jugador ha puesto letras
+			
+			System.out.println("Movimiento");
 			break;
-		case "CAMBIO DE LETRAS": //el jugador ha puesto letras
-			String letras = jso.getString("letras");
+		case "CAMBIO_LETRAS": //el jugador ha puesto letras
+
 			//match.cambioDeLetras(session, letras);
 			break;
-		case "PASO DE TURNO": //el jugador ha puesto letras
+		case "PASO_TURNO": //el jugador cambiar el turno
+			System.out.println("Paso turno");
+			match.toggleTurn(session.getId());
 			break;
 		case "ABANDONO": //el jugador ha puesto letras
 			break;

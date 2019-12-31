@@ -53,6 +53,8 @@ public class WSServer extends TextWebSocketHandler {
 			match.toggleTurn(session.getId());
 			break;
 		case "ABANDONO": //el jugador ha puesto letras
+			System.out.println("Abandono");
+			match.giveUp(session.getId());
 			break;
 		
 		}

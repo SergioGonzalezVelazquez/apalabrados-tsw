@@ -131,4 +131,43 @@ public class Match implements LetterDistribution {
 
 	}
 
+	public void giveUp(String idSession)  {
+		User player; //Loser
+		User opponent; //Winner
+		
+		if (this.playerA.getSession().getId().equals(idSession)) {
+			player = playerA;
+			opponent = playerB;
+		} else {
+			player = playerB;
+			opponent = playerA;
+		}
+		
+		// Primero mandamos un mensaje al jugador que se ha rendido
+		try {
+			JSONObject jsLoser = new JSONObject();
+			jsLoser.put("winner", false);
+			jsLoser.put("type", "MATCH_END");
+			player.sendMessage(jsLoser.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		// Después, mandamos el mensaje al jugador que ha ganado
+		try {
+			JSONObject jsWinner = new JSONObject();
+			jsWinner.put("winner", true);
+			jsWinner.put("type", "MATCH_END");
+			opponent.sendMessage(jsWinner.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+
+		
+	}
+
 }

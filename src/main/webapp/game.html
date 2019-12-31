@@ -154,7 +154,8 @@
                 shuffle
               </i><br><span>Mezclar</span></button>
 
-            <button type="button" class="btn btn-dark" data-bind="enable: turn"> <i class="material-icons">
+            <button type="button" class="btn btn-dark" data-bind="enable: turn, click: $root.cambiar"> <i
+                class="material-icons">
                 repeat
               </i><br><span>Cambiar</span></button>
 
@@ -168,7 +169,7 @@
                 fast_forward
               </i><br><span>Pasar</span></button>
 
-            <button type="button" class="btn btn-dark"> <i class="material-icons">
+            <button type="button" class="btn btn-dark" data-bind="click: $root.abandonar"> <i class="material-icons">
                 outlined_flag
               </i><br><span>Rendirse</span></button>
           </div>
@@ -250,70 +251,102 @@
     </div>
   </div>
 
-  <!-- Modal With Information -->
-  <div class="portfolio-modal modal fade" id="portfolioModalYoutubeDL" tabindex="-1" role="dialog" aria-hidden="true">
+  <!--<button type="button" class="close" data-dismiss="modal">&times;</button>-->
+
+  <!-- Dialog: Loser -->
+  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogLoser">
     <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="container">
-          <div class="row">
-            <img class="d-block w-100" src="img/portfolio/capturaInterfaz.jpg" alt="captura interfaz">
-            <div class="col">
-              <div class="modal-body">
-                <h2>Youtube DL</h2>
-                <p class="item-intro text-muted">Aplicación de escritorio</p>
-                <p>Aplicación de línea de comandos desarrollada en la asignatura <strong>Sistemas Distribuidos</strong>
-                  con el de diseñar un sistema
-                  cliente-servidor utilizando el middleware de comunicaciones orientado a objetos ZeroC Ice. El programa
-                  permite la
-                  extracción de ficheros de audio a partir de la URL de clips de YouTube.
-                </p>
-
-                <p>Además, es un sistema escalabe, permitiendo la creación bajo demanda de nuevos servidores encargados
-                  de
-                  las tareas de descarga y extracción de los audios. Estos servidore se interconectan y sincronizan de
-                  forma automática
-                  entre sí, proporcionando de esta manera un sistema de alta disponibilidad.
-                </p>
-                <ul class="list-inline">
-                  <li>Fecha: Enero 2019</li>
-                </ul>
-
-                <a class="btn btn-git" href="https://github.com/SergioGonzalezVelazquez/ProyectoSSDD" target="_blank">
-                  <i class="fab fa-github"></i>
-                  Ver repositorio</a>
-                <button class="btn btn-close" data-dismiss="modal" type="button">
-                  <i class="fas fa-times"></i></button>
-              </div>
-            </div>
-          </div>
+      <div class="modal-content info-modal">
+        <div class="modal-body ">
+          <span class="title">Partida terminada</span><br>
+          <img src="assets/images/icons/sad.png" alt="perdedor"><br>
+          <span class="loser">¡Ooooooops!</span><br>
+          <span>¡Has Perdido!</span><br>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary btn-xs" data-bind="click : submitEnd">Close</button>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="modal" id="loserModal">
-    <h1>Has perdido</h1>
+  <!-- Dialog: Winner -->
+  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogWinner">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content info-modal">
+        <div class="modal-body ">
+          <span class="title">Partida terminada</span><br>
+          <img src="assets/images/icons/feliz.png" alt="perdedor"><br>
+          <span class="winner">¡Felicidades!</span><br>
+          <span>Has ganado la partida</span><br>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary btn-xs" data-bind="click : submitEnd">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog: Cambiar letras -->
+  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogCambioLetras">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content letras-modal">
+        <div class="modal-body cambioLetras">
+          <span class="title">Seleccione las letras que desea cambiar</span><br>
+          <!-- ko using : tablero -->
+          <ul>
+            <!-- ko foreach : panel -->
+            <li>
+              <input type="checkbox" data-bind="attr: {id: 'myCheckbox' + $index()}" />
+              <label data-bind="attr: {for: 'myCheckbox' + $index()}">
+                <img data-bind="attr: { src: '/assets/images/' + $data + '.svg'}" alt="$data" />
+              </label>
+            </li>
+            <!-- /ko -->
+          </ul>
+          <!-- /ko -->
+        </div>
+        <div class="modal-footer">
+          <a class="circle-button confirm" data-bind="click: cambiarLetrasConfirm">
+            <i class="material-icons">
+              repeat
+            </i>
+          </a>
+          <a class="circle-button cancel" data-bind="click: cambiarLetrasCancel">
+            <i class="material-icons">
+              close
+            </i>
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 
 
-  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <!-- jQuery -->
   <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
     integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous">
   </script>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
 
+  <!-- Popper -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
     integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous">
   </script>
+
+  <!-- Shuffle   <script src="js/shuffler.js"></script>-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+  <!--Bootsrap-->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"
     integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous">
   </script>
-  <!-- Shuffle   <script src="js/shuffler.js"></script>-->
-  <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js'></script>
+
 
   <!-- TouchPunch -->
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js'></script>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
   <!--<script src="./script.js"></script> -->
 </body>
 

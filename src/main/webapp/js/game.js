@@ -5,19 +5,64 @@ function GameViewModel(user) {
     //General: controlling hide & show tablero and isLoading animation
     this.shouldShowBoard = ko.observable(false);
     this.isLoading = ko.observable(false);
-    this.visiblePopup = ko.observable(false);
 
-    this.popupOptions = {
-        width: 300,
-        height: 250,
-        contentTemplate: "info",
-        showTitle: true,
-        title: "Information",
-        visible: this.visiblePopup,
-        dragEnabled: false,
-        closeOnOutsideClick: true
-    };
+    //jQuery dialogs 
+    ko.bindingHandlers.modal = {
+        init: function (element, valueAccessor) {
+            $(element).modal({
+                show: false,
+                backdrop: 'static',
+                keyboard: false
+            });
 
+            var value = valueAccessor();
+            if (ko.isObservable(value)) {
+                // Update 28/02/2018
+                // Thank @HeyJude for fixing a bug on
+                // double "hide.bs.modal" event firing.
+                // Use "hidden.bs.modal" event to avoid
+                // bootstrap running internal modal.hide() twice.
+                $(element).on('hidden.bs.modal', function () {
+                    value(false);
+                });
+            }
+
+            // Update 13/07/2016
+            // based on @Richard's finding,
+            // don't need to destroy modal explicitly in latest bootstrap.
+            // modal('destroy') doesn't exist in latest bootstrap.
+            // ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+            //    $(element).modal("destroy");
+            // });
+
+        },
+        update: function (element, valueAccessor) {
+            var value = valueAccessor();
+            if (ko.utils.unwrapObservable(value)) {
+                $(element).modal('show');
+            } else {
+                $(element).modal('hide');
+            }
+        }
+    }
+
+    this.showDialogLoser = ko.observable(false);
+    this.showDialogWinner = ko.observable(false);
+    this.showDialogCambioLetras = ko.observable(false);
+
+    this.cambiarLetrasCancel = function () {
+        self.showDialogCambioLetras(false);
+    }
+
+    this.cambiarLetrasConfirm = function () {
+        self.showDialogCambioLetras(false);
+    }
+
+    this.submitEnd = function () {
+        self.showDialogLoser(false);
+        self.showDialogWinner(false);
+        endMatch();
+    }
 
     //User (Player 1) properties
     this.player1 = ko.observable(new Player(ko, user.userName, user.email, user.photo));
@@ -52,14 +97,12 @@ function GameViewModel(user) {
     var timerController = null;
     var countdown = function () {
         timerController = setInterval(function () {
-            console.log("setInterval " + self.timer)
             var newTimer = self.timer() - 1;
 
             if (newTimer < 0) {
                 self.timer(120);
                 self.stopCountdown();
-                console.log("Temporizador out")
-
+                self.abandonar();
                 return 0;
             } else {
                 self.timer(newTimer);
@@ -68,13 +111,11 @@ function GameViewModel(user) {
     }
 
     this.launchCountdown = function () {
-        console.log("launchCountdown")
         self.timer(120);
         countdown();
     }
 
     this.stopCountdown = function () {
-        console.log("stop interval")
         self.timer(120);
         clearInterval(timerController);
         timerController = null;
@@ -123,7 +164,6 @@ function GameViewModel(user) {
             $(element).droppable({
 
                 accept: function (dropedElement) {
-                    //console.log(bindingContext.$data)
                     return true;
                 },
 
@@ -143,9 +183,7 @@ function GameViewModel(user) {
 
                     console.log("Has soltado la letra " + letter + " en fila:" + data.row + ", col:" + data.column)
                     data.letter = letter;
-                    console.log(data);
                     self.tablero().casillasJugadas().push(data);
-                    console.log("casillas jugadas: " + self.tablero().casillasJugadas().length);
                 },
             });
         }
@@ -223,6 +261,14 @@ function GameViewModel(user) {
         $.ajax(data);
     }
 
+    function endMatch() {
+        self.shouldShowBoard(false);
+        sessionStorage.removeItem("sessionStorage");
+        self.stopCountdown();
+        self.player2 = ko.observable();
+
+    }
+
     function gameError(response) {
         console.log(response.responseText)
     }
@@ -236,7 +282,6 @@ function GameViewModel(user) {
             sessionStorage.idPartida = response.idPartida;
 
         self.ws.onopen = function (event) {
-            console.log(response.type)
             if (response.type == "PARTIDA LISTA") {
                 var mensaje = {
                     type: "INICIAR PARTIDA",
@@ -264,8 +309,6 @@ function GameViewModel(user) {
                 console.log("start")
                 self.shouldShowBoard(true);
                 self.isLoading(false);
-                console.log("JSON:")
-                console.log(JSON.stringify(jso))
                 self.player1().turn(jso.turn)
                 self.player2().turn(!jso.turn);
                 self.player2().name(jso.opponent);
@@ -274,7 +317,6 @@ function GameViewModel(user) {
 
                 //Binding letters
                 var letters = jso.letters.split(' ');
-                console.log(jso.letters)
                 for (var i = 0; i < letters.length; i++) {
                     self.tablero().panel.push(letters[i]);
                 }
@@ -282,13 +324,10 @@ function GameViewModel(user) {
                 //Iniciar temporizador
                 if (jso.turn) {
                     self.launchCountdown();
-                    console.log("contador iniciado on start")
                 }
-                console.log(self.tablero().panel)
 
 
             } else if (jso.type == "MOVEMENT") {
-                console.log("movement")
                 if (jso.exceptions > 0) {
 
                 } else {
@@ -299,7 +338,6 @@ function GameViewModel(user) {
                     if (jso.movements.length > 0) {
 
                     } else {
-                        console.log(self.player1().name())
                         var timestamp = new Date();
                         self.movementHistory.unshift("[" + addZero(timestamp.getHours()) + ":" + addZero(timestamp.getMinutes()) + ":" +
                             addZero(timestamp.getSeconds()) + "]\t" + self.player1().name() + " pasó su turno sin movimientos");
@@ -313,7 +351,6 @@ function GameViewModel(user) {
 
             //El jugador rival ha hecho un movimiento
             else if (jso.type == "OPPONENT_MOVEMENT") {
-                console.log("opponent_movement")
                 if (jso.exceptions > 0) {
 
                 } else {
@@ -332,6 +369,16 @@ function GameViewModel(user) {
 
                 //Launch timer
                 self.launchCountdown();
+            }
+
+            //Fin de la partida
+            else if (jso.type == "MATCH_END") {
+                console.log("match end")
+                if (jso.winner) {
+                    self.showDialogWinner(true);
+                } else {
+                    self.showDialogLoser(true);
+                }
 
             }
         }
@@ -359,7 +406,6 @@ function GameViewModel(user) {
                 });
                 self.ws.send(JSON.stringify(mensaje));
 
-                console.log("Jugar")
                 console.log(self.tablero().casillasJugadas())
             } else {
                 //Error
@@ -388,7 +434,22 @@ function GameViewModel(user) {
     }
 
     //Panel de botones: CAMBIAR
-    this.cambiar = function () {}
+    this.cambiar = function () {
+        self.showDialogCambioLetras(true)
+    }
+
+
+    /**
+     * Panel de botones: RENDIRSE
+     */
+    this.abandonar = function () {
+        console.log("rendirse")
+        var mensaje = {
+            type: "ABANDONO",
+            idPartida: sessionStorage.getItem('idPartida'),
+        };
+        self.ws.send(JSON.stringify(mensaje));
+    }
 
 }
 

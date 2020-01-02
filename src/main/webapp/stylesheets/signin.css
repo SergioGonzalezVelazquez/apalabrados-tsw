@@ -124,6 +124,15 @@ body {
   background-color: #d34836;
   color: white;
 }
+
+.error {
+  padding: .5em;
+  background-color: #EB1E32;
+  border-color: #EB1E32;
+  color: #FFF;
+  text-align: center;
+}
+
 /*
 Bootstrap 4 breakpoints
 */

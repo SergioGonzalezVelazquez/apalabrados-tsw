@@ -19,17 +19,17 @@
     <link href="stylesheets/signin.css" rel="stylesheet">
 
     <!-- JavaScript -->
-    <script type='text/javascript' src="js/user.js" defer="defer"></script>
+    <script type="text/javascript" src="js/user.js" defer="defer"></script>
 
     <!-- jQuery -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
     <!-- Knockout -->
-    <script type='text/javascript' src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
 
     <!-- Firebase -->
-    <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase.js'></script>
-    <script type='text/javascript' src='https://cdn.firebase.com/v0/firebase-simple-login.js'></script>
+    <script type="text/javascript" src="https://cdn.firebase.com/v0/firebase.js"></script>
+    <script type="text/javascript" src="https://cdn.firebase.com/v0/firebase-simple-login.js"></script>
 
 </head>
 
@@ -129,7 +129,7 @@
         </div>
 
         <!-- Remember pwd view -->
-        <div id="signUp-view" data-bind="visible: showRestorePwd">
+        <div id="rememberPwd-view" data-bind="visible: showRestorePwd">
             <!-- Email input -->
             <div class="form-group">
                 <label for="inputEmail" class="sr-only">Correo electrónico</label>
@@ -137,7 +137,7 @@
                     placeholder="Correo electrónico" required autofocus>
             </div>
             <!-- Sign-up button-->
-            <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"><strong>Recuperar
+            <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block" data-bind="click: updatePwd"><strong>Recuperar
                     contraseña</strong></button>
 
             <!-- Forgot pwd link and remember me-->

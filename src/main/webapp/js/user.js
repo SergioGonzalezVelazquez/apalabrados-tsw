@@ -69,7 +69,28 @@ function UserViewModel() {
 		$.ajax(data);
 	}
 
-	function singupOK(response){
+	this.updatePwd = function () {
+		var info = {
+			email: this.userEmail(),
+		};
+		var data = {
+			data: info,
+			url: "requestToken",
+			type: "post",
+			error: error
+		};
+		$.ajax(data);
+		
+		$("#message").attr("style", "color:green");
+		self.message("Si hay un usuario registrado con el correo " + self.userEmail() +
+			" recibirás un correo con las instrucciones para actualizar la contraseña");
+
+		console.log("msg updatePwd enviado")
+	}
+
+
+
+	function singupOK(response) {
 		$("#message").attr("style", "color:green");
 		self.message("Registrado correctamente. ¡Inicia sesión y juega!");
 		self.changeViewToSignIn();

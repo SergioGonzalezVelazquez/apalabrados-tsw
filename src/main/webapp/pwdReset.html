@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+
+    <title>Apalabrados</title>
+
+    <!-- this is the code that will allow icon to be visible in the title bar of the brower -->
+    <link rel="icon" type="image/ico" href="assets/images/logo.png" />
+
+    <!-- Bootstrap core CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <!-- Custom CSS styles-->
+    <link href="stylesheets/signin.css" rel="stylesheet">
+
+    <!-- JavaScript -->
+    <script type="text/javascript" src="js/pwdReset.js" defer="defer"></script>
+
+    <!-- JavaScript -->
+
+    <!-- jQuery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+    <!-- Knockout -->
+    <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
+</head>
+
+
+<body class="text-center">
+    <form class="form-general">
+
+        <!-- Logo Apalabrados -->
+        <img id="imgLogo" class="img-responsive" src="assets/images/logo.png" alt="Apalabrados" width="72" height="72">
+        <h1 id="txtLogo" class="tittleApalabrados">Apalabrados</h1>
+
+        <!-- Sign-up view -->
+        <div id="signUp-view" data-bind="visible: showRestorePwd">
+            <!-- Password input -->
+            <div class="form-group">
+                <label for="inputPassword" class="sr-only">Nueva contraseña</label>
+                <input type="password" data-bind="value : pwd" id="inputPassword" class="form-control rounded-pill"
+                    placeholder="Contraseña" required>
+            </div>
+
+            <!-- Confirm Password input -->
+            <div class="form-group">
+                <label for="inputPassword2" class="sr-only">Confirmar Contraseña</label>
+                <input type="password" data-bind="value : pwd2" id="inputPassword2" class="form-control rounded-pill"
+                    placeholder="Confirmar contraseña" required>
+            </div>
+
+            <!-- Sign-up button-->
+            <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
+                data-bind="click: resetPwdBtn"><strong>Cambiar contraseña</strong></button>
+        </div>
+
+        <!-- Error view -->
+        <div class="row error" data-bind="visible: showErrorMsg">
+            <span> Tu vínculo de reinicio de la contraseña no es válido, o ha expirado.</span>
+        </div>
+
+        <label id="message pt-3" data-bind="html : message"> PRUEBA</label>
+
+        <p data-bind="visible: showLoginRef" class="mt-3 font-weight-normal"><a href="http://localhost:8080/index.html"><strong>Inicia sesión</strong></a></p>
+
+        <p class="mt-5 mb-3 text-muted">&copy; Sergio González - Francisco de la Mata</p>
+
+
+    </form>
+    <script src="https://knockoutjs.com/downloads/knockout-3.5.0.js"></script>
+</body>
+
+</html>

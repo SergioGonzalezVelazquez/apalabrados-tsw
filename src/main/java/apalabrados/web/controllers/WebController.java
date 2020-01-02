@@ -4,9 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static org.apache.commons.codec.digest.MessageDigestAlgorithms.SHA_224;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.codec.digest.DigestUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -17,15 +20,20 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import apalabrados.dao.TokenRepository;
 import apalabrados.dao.UserRepository;
 import apalabrados.model.User;
+import apalabrados.model.Token;
 import apalabrados.web.exceptions.LoginException;
 import apalabrados.model.Match;
 
 @RestController
 public class WebController {
 	@Autowired
+	private TokenRepository tokenRepo;
+	@Autowired
 	private UserRepository userRepo;
+	
 	private List<Match> pendingMatches = new ArrayList<>();
 	public static ConcurrentHashMap<String, Match> inPlayMatches = new ConcurrentHashMap<>();
 
@@ -43,7 +51,11 @@ public class WebController {
 		User user = new User();
 		user.setEmail(email);
 		user.setUserName(userName);
-		user.setPwd(pwd1);
+		
+		//Encrypt password with SHA-1
+		String pwdEncrypt = DigestUtils.sha1Hex(pwd1);
+		System.out.println("Registro encript: " + pwdEncrypt);
+		user.setPwd(pwdEncrypt);
 
 		userRepo.save(user);
 		System.out.println("register Ok");
@@ -56,11 +68,12 @@ public class WebController {
 			@RequestParam(value = "pwd") String pwd) throws LoginException {
 		User user;
 		user = userRepo.findByEmail(email);
-		if (user != null && user.getPwd().equals(pwd)) {
+		String pwdEncrypt = DigestUtils.sha1Hex(pwd);
+		System.out.println("Login encript: " + pwdEncrypt);
+		if (user != null && user.getPwd().equals(pwdEncrypt)) {
 			session.setAttribute("user", user);
 			return user;
 		}
-
 		else
 			throw new LoginException();
 	}
@@ -106,6 +119,21 @@ public class WebController {
 		jso.put("idPartida", match.getId());
 		return jso.toString();
 	}
+	
+	@PostMapping("requestToken")
+	public void solicitarToken(@RequestParam String email) {
+		Token token = new Token(email);
+		tokenRepo.save(token);
+		
+		
+		
+	}
+	
+	@PostMapping("updatePwd")
+	public void actualizarPwd() throws Exception {
+		
+	}
+	
 
 	@ExceptionHandler(Exception.class)
 	public ModelAndView handleException(HttpServletRequest req, Exception ex) {

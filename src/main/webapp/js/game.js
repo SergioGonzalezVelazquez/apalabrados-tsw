@@ -50,12 +50,23 @@ function GameViewModel(user) {
     this.showDialogWinner = ko.observable(false);
     this.showDialogCambioLetras = ko.observable(false);
 
+    //CAMBIO DE LETRAS
+    this.changeLetters = ko.observableArray();
+
     this.cambiarLetrasCancel = function () {
         self.showDialogCambioLetras(false);
     }
 
     this.cambiarLetrasConfirm = function () {
         self.showDialogCambioLetras(false);
+
+        console.log(self.changeLetters());
+
+        var mensaje = {
+            type: "CAMBIO_LETRAS",
+            idPartida: sessionStorage.getItem('idPartida'),
+            letters: []
+        };
     }
 
     this.submitEnd = function () {
@@ -147,10 +158,12 @@ function GameViewModel(user) {
     };
     */
 
+
     //Draggable element
     ko.bindingHandlers.draggable = {
         init: function (element, valueAccessor, allBindings, data, bindingContext) {
             $(element).draggable({
+                scroll: false,
                 revert: "invalid",
                 snap: ".scrabble-td"
                 //grid: [40,40]
@@ -164,7 +177,7 @@ function GameViewModel(user) {
             $(element).droppable({
 
                 accept: function (dropedElement) {
-                    return true;
+                    return (data.letter === "");
                 },
 
                 drop: function (event, ui) {
@@ -369,6 +382,11 @@ function GameViewModel(user) {
 
                 //Launch timer
                 self.launchCountdown();
+        
+            //Cambio de letras
+            }else if (jso.type == "NEW_LETTERS") {
+                console.log("new letters")
+
             }
 
             //Fin de la partida
@@ -382,6 +400,11 @@ function GameViewModel(user) {
 
             }
         }
+    }
+
+    this.llamar = function () {
+        console.log("llamar")
+        $( ".letters li" ).draggable( "enable" );
     }
 
     /**

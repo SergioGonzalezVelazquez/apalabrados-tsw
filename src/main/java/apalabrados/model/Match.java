@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+
 import java.util.UUID;
 
 public class Match implements LetterDistribution {
@@ -164,10 +165,30 @@ public class Match implements LetterDistribution {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+			
+	}
+	
+	public void changeLetters (String idSession, Character [] letters) {
+		User player = this.playerA.getSession().getId().equals(idSession) ? playerA : playerB;
 		
-		
+		try {
+			JSONObject jsa = new JSONObject();
+			jsa.put("type", "NEW_LETTERS");
+			jsa.put("letters", getLetters(letters.length));
+			
+			//Devolver las letras del usuario al listado de letras
+			for (Character letter : letters)
+			{ 
+			    this.letters.add(letter);
+			}
+			player.sendMessage(jsa.toString());
 
-		
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (JSONException e) {
+
+		}
 	}
 
 }

@@ -6,7 +6,9 @@ function GameViewModel(user) {
     this.shouldShowBoard = ko.observable(false);
     this.isLoading = ko.observable(false);
 
-    //jQuery dialogs 
+    /***********************************
+     * jQuery dialogs and modals
+     ***********************************/
     ko.bindingHandlers.modal = {
         init: function (element, valueAccessor) {
             $(element).modal({
@@ -17,24 +19,10 @@ function GameViewModel(user) {
 
             var value = valueAccessor();
             if (ko.isObservable(value)) {
-                // Update 28/02/2018
-                // Thank @HeyJude for fixing a bug on
-                // double "hide.bs.modal" event firing.
-                // Use "hidden.bs.modal" event to avoid
-                // bootstrap running internal modal.hide() twice.
                 $(element).on('hidden.bs.modal', function () {
                     value(false);
                 });
             }
-
-            // Update 13/07/2016
-            // based on @Richard's finding,
-            // don't need to destroy modal explicitly in latest bootstrap.
-            // modal('destroy') doesn't exist in latest bootstrap.
-            // ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
-            //    $(element).modal("destroy");
-            // });
-
         },
         update: function (element, valueAccessor) {
             var value = valueAccessor();
@@ -49,8 +37,116 @@ function GameViewModel(user) {
     this.showDialogLoser = ko.observable(false);
     this.showDialogWinner = ko.observable(false);
     this.showDialogCambioLetras = ko.observable(false);
+    this.showDialogProfileImage = ko.observable(false);
 
-    //CAMBIO DE LETRAS
+    this.closeModals = function () {
+        self.showDialogLoser(false);
+        self.showDialogWinner(false);
+        self.showDialogCambioLetras(false);
+        self.showDialogProfileImage(false);
+    }
+
+    this.displayDialogWinner = function () {
+        self.closeModals();
+        self.showDialogWinner(true);
+    }
+
+    this.displayDialogLoser = function () {
+        self.closeModals();
+        self.showDialogLoser(true);
+    }
+
+    /***********************************
+     * Notificaciones
+     ***********************************/
+    this.notificationClass = ko.observable();
+    this.notificationMessage = ko.observable();
+    this.showNotification = ko.observable(false);
+    this.displayNotification = function (clazz, message) {
+        self.notificationClass(clazz);
+        self.notificationMessage(message);
+        self.showNotification(true)
+    }
+    this.closeNotification = function () {
+        self.showNotification(false);
+    }
+
+    /***********************************
+     * Cambiar imagen de perfil
+     ***********************************/
+
+    //Drag and drop no implementado:
+    //https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
+    //https://codepen.io/safrazik/pen/uIrwC
+
+    this.selectProfileImage = function () {
+        self.closeModals();
+        self.showDialogProfileImage(true);
+    }
+
+    //base 64 encoded file
+    this.photoEncoded = ko.observable();
+    this.photoUrl = ko.observable();
+
+    //https://stackoverflow.com/questions/27958047/file-upload-using-knockout-js
+    this.fileUpload = function (data, e) {
+        var file = e.target.files[0];
+        self.photoUrl(file.name)
+        var reader = new FileReader();
+
+        reader.onloadend = function (onloadend_e) {
+            var result = reader.result;
+            self.photoEncoded(result);
+            console.log(result)
+        };
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    };
+
+    this.updateImage = function () {
+        self.closeModals();
+
+
+        if (self.photoEncoded()) {
+            //Send image to server
+            var info = {
+                base64Image: self.photoEncoded(),
+            };
+
+            var data = {
+                data: info,
+                url: "/updatePhoto",
+                type: "post",
+                success: updatePhotoOK,
+                error: updatePhotoError
+            };
+            $.ajax(data);
+        } else {
+            self.displayNotification("notification-error", "No ha seleccionado ninguna imagen");
+        }
+
+
+    }
+
+    function updatePhotoOK(response) {
+        self.player1().photo(self.photoEncoded())
+        self.photoEncoded(null)
+        self.photoUrl(null)
+        self.displayNotification("notification-success", "Foto de perfil actualizada");
+    }
+
+    function updatePhotoError(response) {
+        self.displayNotification("notification-error", "No se pudo actualizar la foto de perfil");
+        self.photoEncoded(null)
+        self.photoUrl(null)
+    }
+
+
+    /***********************************
+     * Cambio de letras
+     ***********************************/
     this.changeLetters = ko.observableArray();
 
     this.cambiarLetrasCancel = function () {
@@ -70,10 +166,13 @@ function GameViewModel(user) {
     }
 
     this.submitEnd = function () {
-        self.showDialogLoser(false);
-        self.showDialogWinner(false);
+        self.closeModals();
         endMatch();
     }
+
+    /***********************************
+     * Data bindings
+     ***********************************/
 
     //User (Player 1) properties
     this.player1 = ko.observable(new Player(ko, user.userName, user.email, user.photo));
@@ -87,12 +186,13 @@ function GameViewModel(user) {
     //Controller for Popups
     this.shouldShowPopup = ko.observable(false);
 
-
     //Movement history. Initially an empty array
     this.movementHistory = ko.observableArray();
 
 
-    //Timer.
+    /***********************************
+     * Timer
+     ***********************************/
     //https://stackoverflow.com/questions/22080400/hours-minutes-seconds-knockout-countdown-timer
     self.timer = ko.observable(120);
 
@@ -382,9 +482,9 @@ function GameViewModel(user) {
 
                 //Launch timer
                 self.launchCountdown();
-        
-            //Cambio de letras
-            }else if (jso.type == "NEW_LETTERS") {
+
+                //Cambio de letras
+            } else if (jso.type == "NEW_LETTERS") {
                 console.log("new letters")
 
             }
@@ -393,9 +493,9 @@ function GameViewModel(user) {
             else if (jso.type == "MATCH_END") {
                 console.log("match end")
                 if (jso.winner) {
-                    self.showDialogWinner(true);
+                    self.displayDialogWinner();
                 } else {
-                    self.showDialogLoser(true);
+                    self.displayDialogLoser();
                 }
 
             }
@@ -404,7 +504,7 @@ function GameViewModel(user) {
 
     this.llamar = function () {
         console.log("llamar")
-        $( ".letters li" ).draggable( "enable" );
+        $(".letters li").draggable("enable");
     }
 
     /**
@@ -660,9 +760,9 @@ if (!user) {
 }
 
 
-/**
+/***********************************
  * UTILS
- */
+ ***********************************/
 function addZero(i) {
     if (i < 10) {
         i = "0" + i;

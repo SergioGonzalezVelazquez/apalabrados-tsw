@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.*;
 
 import static org.apache.commons.codec.digest.MessageDigestAlgorithms.SHA_224;
 
@@ -11,6 +12,7 @@ import javax.mail.MessagingException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
+import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -185,6 +187,36 @@ public class WebController {
 		}		
 	}
 	
+	@PostMapping("/updatePhoto")
+	public ResponseEntity<String> updatePhoto(HttpSession session, @RequestParam String base64Image) throws Exception {
+		if (session.getAttribute("user") == null)
+			throw new Exception("Identifícate para actualizar tu perfil");
+
+		User user = (User) session.getAttribute("user");
+
+		//Los datos recibidos deben ser de la forma data:image/[png|jpg|...];base64,.....
+		//Primero comprobamos que la primera parte es de la forma data:image/[png|jpg|...]
+		Pattern patron = Pattern.compile("^data:image\\/[a-z1-9]+;base64,");
+		Matcher matcher = patron.matcher(base64Image);
+		if(!matcher.find()) {
+			throw new Exception("Entrada de archivo no válida");
+		}
+		
+		//Después cogemos la parte base64
+		String bytes = base64Image.split(",")[1];
+		System.out.println(bytes);
+		
+		if(!Base64.isBase64(bytes)) {
+			throw new Exception("Entrada de archivo no válida");
+		}
+		
+		byte[] encoded = Base64.encodeBase64(base64Image.getBytes());
+		user.setPhoto(encoded);
+		userRepo.save(user);
+		System.out.println("guardado");
+		
+		return ResponseEntity.ok().build();	
+	}
 
 	@ExceptionHandler(Exception.class)
 	public ModelAndView handleException(HttpServletRequest req, Exception ex) {

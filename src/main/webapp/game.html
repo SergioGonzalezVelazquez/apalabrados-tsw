@@ -73,7 +73,7 @@
           <div class="dropdown-menu dropdown-menu-lg-right dropdown-secondary"
             aria-labelledby="navbarDropdownMenuLink-55">
             <a class="dropdown-item" href="#">Perfil</a>
-            <a class="dropdown-item" href="#">Preferencias</a>
+            <a class="dropdown-item" data-bind="click: selectProfileImage">Cambiar foto de perfil</a>
             <div class="dropdown-divider"></div>
             <a class="dropdown-item" href="#" data-bind="click : logout">Salir</a>
           </div>
@@ -159,8 +159,8 @@
                 repeat
               </i><br><span>Cambiar</span></button>
 
-            <button type="button" id="restore" class="btn btn-dark"
-              data-bind="click: $root.llamar"> <i class="material-icons">
+            <button type="button" id="restore" class="btn btn-dark" data-bind="click: $root.llamar"> <i
+                class="material-icons">
                 settings_backup_restore
               </i><br><span>Llamar</span></button>
 
@@ -320,6 +320,59 @@
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogProfileImage">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body image-selector">
+          <img class="myImage"
+            data-bind="attr: {src: $root.photoEncoded() || $root.player1().photo || 'assets/images/default-user-icon.jpg'}" />
+          <!-- <input data-bind="event: {change: $root.fileUpload}" type="file" accept="image/*" class="fileContainer" />-->
+          <div class="custom-file" id="customFile">
+            <input data-bind="event: {change: $root.fileUpload}" type="file" class="custom-file-input" accept="image/*">
+            <label class="custom-file-label" data-bind="text: $root.photoUrl() || 'Seleccionar imagen'"
+              for="exampleInputFile">
+            </label>
+          </div>
+
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ligh btn-xs" data-bind="click : updateImage">Guardar</button>
+          <button type="button" class="btn btn-dark btn-xs" data-bind="click : closeModals">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications 
+    https://codepen.io/damianmuti/pen/GEZoeG
+  -->
+  <div class="notification" data-bind="visible: $root.showNotification, class: $root.notificationClass">
+    <div class="notification-icon">
+      <!-- ko if: $root.notificationClass() == "notification-success"-->
+      <i class="material-icons">
+        done
+      </i>
+      <!--/ko-->
+      <!-- ko if: $root.notificationClass() == "notification-error"-->
+      <i class="material-icons">
+        error
+      </i>
+      <!--/ko-->
+      <!-- ko if: $root.notificationClass() == "notification-warning"-->
+      <i class="material-icons">
+        warning
+      </i>
+      <!--/ko-->
+    </div>
+    <div class="notification-body">
+      <p data-bind="text: $root.notificationMessage"></p>
+    </div>
+    <button class="notification-close" data-bind="click: $root.closeNotification"><i class="material-icons">
+        close
+      </i></button>
   </div>
 
 

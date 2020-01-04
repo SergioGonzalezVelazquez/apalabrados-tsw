@@ -7,6 +7,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Transient;
 
+import org.apache.commons.codec.binary.Base64;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.web.socket.TextMessage;
@@ -14,36 +15,56 @@ import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 public class User {
-	
-	@Id @Column
+
+	@Id
+	@Column
 	private String userName;
-	@Column (unique = true)
+	@Column(unique = true)
 	private String email;
 	@Column
-	private String photo;
-	@Column @JsonIgnore
+	@JsonIgnore
+	private byte[] photo;
+	@Column
+	@JsonIgnore
 	private String pwd;
-	@JsonIgnore @Transient
+	@JsonIgnore
+	@Transient
 	private WebSocketSession session;
-	
-	public User() {}
-	
+
+	public User() {
+	}
+
+	@JsonProperty(value = "photo")
+	public String getBase64Photo() {
+		if (this.photo != null) {
+			try {
+				byte[] decodedBytes = Base64.decodeBase64(this.photo);
+				return new String(decodedBytes);
+			} catch (Exception e) {
+				return "";
+			}
+
+		} else {
+			return "";
+		}
+	}
+
 	public String getUserName() {
 		return userName;
 	}
-	
+
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	
+
 	public String getEmail() {
 		return email;
 	}
-	
+
 	public void setEmail(String email) {
 		this.email = email;
 	}
@@ -51,22 +72,21 @@ public class User {
 	public void setPwd(String pwd) {
 		this.pwd = pwd;
 	}
-	
+
 	public String getPwd() {
 		return pwd;
 	}
-	
 
-	public String getPhoto() {
+	public byte[] getPhoto() {
 		return photo;
 	}
 
-	public void setPhoto(String photo) {
+	public void setPhoto(byte[] photo) {
 		this.photo = photo;
 	}
 
 	public void setWebSocketSession(WebSocketSession session) {
-		this.session=session;
+		this.session = session;
 	}
 
 	public void sendMessage(String msg) throws IOException {

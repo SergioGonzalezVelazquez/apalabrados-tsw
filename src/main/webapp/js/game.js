@@ -6,9 +6,7 @@ function GameViewModel(user) {
     this.shouldShowBoard = ko.observable(false);
     this.isLoading = ko.observable(false);
 
-    /***********************************
-     * jQuery dialogs and modals
-     ***********************************/
+    //jQuery dialogs 
     ko.bindingHandlers.modal = {
         init: function (element, valueAccessor) {
             $(element).modal({
@@ -19,10 +17,24 @@ function GameViewModel(user) {
 
             var value = valueAccessor();
             if (ko.isObservable(value)) {
+                // Update 28/02/2018
+                // Thank @HeyJude for fixing a bug on
+                // double "hide.bs.modal" event firing.
+                // Use "hidden.bs.modal" event to avoid
+                // bootstrap running internal modal.hide() twice.
                 $(element).on('hidden.bs.modal', function () {
                     value(false);
                 });
             }
+
+            // Update 13/07/2016
+            // based on @Richard's finding,
+            // don't need to destroy modal explicitly in latest bootstrap.
+            // modal('destroy') doesn't exist in latest bootstrap.
+            // ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
+            //    $(element).modal("destroy");
+            // });
+
         },
         update: function (element, valueAccessor) {
             var value = valueAccessor();
@@ -37,116 +49,8 @@ function GameViewModel(user) {
     this.showDialogLoser = ko.observable(false);
     this.showDialogWinner = ko.observable(false);
     this.showDialogCambioLetras = ko.observable(false);
-    this.showDialogProfileImage = ko.observable(false);
 
-    this.closeModals = function () {
-        self.showDialogLoser(false);
-        self.showDialogWinner(false);
-        self.showDialogCambioLetras(false);
-        self.showDialogProfileImage(false);
-    }
-
-    this.displayDialogWinner = function () {
-        self.closeModals();
-        self.showDialogWinner(true);
-    }
-
-    this.displayDialogLoser = function () {
-        self.closeModals();
-        self.showDialogLoser(true);
-    }
-
-    /***********************************
-     * Notificaciones
-     ***********************************/
-    this.notificationClass = ko.observable();
-    this.notificationMessage = ko.observable();
-    this.showNotification = ko.observable(false);
-    this.displayNotification = function (clazz, message) {
-        self.notificationClass(clazz);
-        self.notificationMessage(message);
-        self.showNotification(true)
-    }
-    this.closeNotification = function () {
-        self.showNotification(false);
-    }
-
-    /***********************************
-     * Cambiar imagen de perfil
-     ***********************************/
-
-    //Drag and drop no implementado:
-    //https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
-    //https://codepen.io/safrazik/pen/uIrwC
-
-    this.selectProfileImage = function () {
-        self.closeModals();
-        self.showDialogProfileImage(true);
-    }
-
-    //base 64 encoded file
-    this.photoEncoded = ko.observable();
-    this.photoUrl = ko.observable();
-
-    //https://stackoverflow.com/questions/27958047/file-upload-using-knockout-js
-    this.fileUpload = function (data, e) {
-        var file = e.target.files[0];
-        self.photoUrl(file.name)
-        var reader = new FileReader();
-
-        reader.onloadend = function (onloadend_e) {
-            var result = reader.result;
-            self.photoEncoded(result);
-            console.log(result)
-        };
-
-        if (file) {
-            reader.readAsDataURL(file);
-        }
-    };
-
-    this.updateImage = function () {
-        self.closeModals();
-
-
-        if (self.photoEncoded()) {
-            //Send image to server
-            var info = {
-                base64Image: self.photoEncoded(),
-            };
-
-            var data = {
-                data: info,
-                url: "/updatePhoto",
-                type: "post",
-                success: updatePhotoOK,
-                error: updatePhotoError
-            };
-            $.ajax(data);
-        } else {
-            self.displayNotification("notification-error", "No ha seleccionado ninguna imagen");
-        }
-
-
-    }
-
-    function updatePhotoOK(response) {
-        self.player1().photo(self.photoEncoded())
-        self.photoEncoded(null)
-        self.photoUrl(null)
-        self.displayNotification("notification-success", "Foto de perfil actualizada");
-    }
-
-    function updatePhotoError(response) {
-        self.displayNotification("notification-error", "No se pudo actualizar la foto de perfil");
-        self.photoEncoded(null)
-        self.photoUrl(null)
-    }
-
-
-    /***********************************
-     * Cambio de letras
-     ***********************************/
+    //CAMBIO DE LETRAS
     this.changeLetters = ko.observableArray();
 
     this.cambiarLetrasCancel = function () {
@@ -166,13 +70,10 @@ function GameViewModel(user) {
     }
 
     this.submitEnd = function () {
-        self.closeModals();
+        self.showDialogLoser(false);
+        self.showDialogWinner(false);
         endMatch();
     }
-
-    /***********************************
-     * Data bindings
-     ***********************************/
 
     //User (Player 1) properties
     this.player1 = ko.observable(new Player(ko, user.userName, user.email, user.photo));
@@ -186,13 +87,12 @@ function GameViewModel(user) {
     //Controller for Popups
     this.shouldShowPopup = ko.observable(false);
 
+
     //Movement history. Initially an empty array
     this.movementHistory = ko.observableArray();
 
 
-    /***********************************
-     * Timer
-     ***********************************/
+    //Timer.
     //https://stackoverflow.com/questions/22080400/hours-minutes-seconds-knockout-countdown-timer
     self.timer = ko.observable(120);
 
@@ -277,26 +177,57 @@ function GameViewModel(user) {
             $(element).droppable({
 
                 accept: function (dropedElement) {
-                    return (data.letter === "");
+                    // comprueba si hay una ficha en esa casilla
+                    if(data.letter != ''){
+                        var row = ui.draggable.id.split(",")[1];
+                        var column = ui.draggable.id.split(",")[2];
+                        var bool=true;
+                        self.tablero().casillasJugadas().forEach(function (item, index, object) {
+                            if (item.row == row && item.column == column) {
+                                bool=false;
+                            }
+                        });
+                        return bool;
+                    }else{
+                        return true;
+                    }
                 },
-
+                //start: function (event, ui) {},
                 drop: function (event, ui) {
+                    // Metodo para comparar si la ficha tiene el atributo onboard
+                    // si tiene elatributo on board se revisa la posicion que tenia 
+                    // y se elimina de casillas jugadas para añadir la nueva posicion
+                    if (ui.draggable.hasClass('onboard')) {
+                        var row = ui.draggable.id.split(",")[1];
+                        var column = ui.draggable.id.split(",")[2];
+
+                        self.tablero().casillasJugadas().forEach(function (item, index, object) {
+                            if (item.row == row && item.column == column) {
+                                self.tablero().casillasJugadas().splice(index, 1);
+                            }
+                        });
+
+                        ui.draggable.id = 'over,' + data.row + ',' + data.column;
+                    } else {
+                        ui.draggable.id = 'over,' + data.row + ',' + data.column;
+                    }
                     ui.draggable.removeClass('onboard');
                     ui.draggable.toggleClass('onboard');
+                    if (event) {
+                        //data: objeto Casilla sobre el que se suelta la ficha
+                        //element: elemento HTML sobre el que se suelta la ficha (td)
 
-                    //data: objeto Casilla sobre el que se suelta la ficha
-                    //element: elemento HTML sobre el que se suelta la ficha (td)
-
-                    //Para obtener la letra que se ha soltado sobre el tablero, utilizo event.toElement, con
-                    //el que se tiene acceso a la imagen de la letra. A partir de ahí, proceso el atributo src
-                    //para obtener la letra. 
-                    var letter = event.toElement.src.split("/");
-                    letter = letter[letter.length - 1].split(".")[0];
+                        //Para obtener la letra que se ha soltado sobre el tablero, utilizo event.toElement, con
+                        //el que se tiene acceso a la imagen de la letra. A partir de ahí, proceso el atributo src
+                        //para obtener la letra. 
+                        var letter = event.toElement.src.split("/");
+                        letter = letter[letter.length - 1].split(".")[0];
 
 
-                    console.log("Has soltado la letra " + letter + " en fila:" + data.row + ", col:" + data.column)
-                    data.letter = letter;
-                    self.tablero().casillasJugadas().push(data);
+                        console.log("Has soltado la letra " + letter + " en fila:" + data.row + ", col:" + data.column)
+                        // esto se pondrá al final data.letter = letter;
+                        self.tablero().casillasJugadas().push(data);
+                    }
                 },
             });
         }
@@ -493,9 +424,9 @@ function GameViewModel(user) {
             else if (jso.type == "MATCH_END") {
                 console.log("match end")
                 if (jso.winner) {
-                    self.displayDialogWinner();
+                    self.showDialogWinner(true);
                 } else {
-                    self.displayDialogLoser();
+                    self.showDialogLoser(true);
                 }
 
             }
@@ -760,9 +691,9 @@ if (!user) {
 }
 
 
-/***********************************
+/**
  * UTILS
- ***********************************/
+ */
 function addZero(i) {
     if (i < 10) {
         i = "0" + i;

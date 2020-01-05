@@ -169,6 +169,7 @@ public class Match implements LetterDistribution {
 	}
 	
 	public void changeLetters (String idSession, Character [] letters) {
+		System.out.println("changeLetters match " + letters.length);
 		User player = this.playerA.getSession().getId().equals(idSession) ? playerA : playerB;
 		
 		try {

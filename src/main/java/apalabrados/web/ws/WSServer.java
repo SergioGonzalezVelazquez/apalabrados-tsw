@@ -2,6 +2,7 @@ package apalabrados.web.ws;
 
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
@@ -13,11 +14,10 @@ import apalabrados.model.User;
 import apalabrados.web.controllers.WebController;
 import apalabrados.model.Match;
 
-
 @Component
 public class WSServer extends TextWebSocketHandler {
-	private static ConcurrentHashMap<String, WebSocketSession> sessionsById=new ConcurrentHashMap<>();
-	private static ConcurrentHashMap<String, WebSocketSession> sessionsByUser=new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, WebSocketSession> sessionsById = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, WebSocketSession> sessionsByUser = new ConcurrentHashMap<>();
 
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -25,38 +25,45 @@ public class WSServer extends TextWebSocketHandler {
 		User user = (User) session.getAttributes().get("user");
 		user.setWebSocketSession(session);
 	}
-	
+
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-		
+
 		System.out.println(message.getPayload());
-		JSONObject jso=new JSONObject(message.getPayload());
+		JSONObject jso = new JSONObject(message.getPayload());
 		String type = jso.getString("type");
 		String idPartida = jso.getString("idPartida");
-		Match match =  WebController.inPlayMatches.get(idPartida);
-		
-		switch(type) {
+		Match match = WebController.inPlayMatches.get(idPartida);
+
+		switch (type) {
 		case "INICIAR PARTIDA":
 			match.start();
 			break;
-		
-		case "MOVIMIENTO": //el jugador ha puesto letras
-			
+
+		case "MOVIMIENTO": // el jugador ha puesto letras
+
 			System.out.println("Movimiento");
 			break;
-		case "CAMBIO_LETRAS": //el jugador ha puesto letras
-
-			//match.cambioDeLetras(session, letras);
+		case "CAMBIO_LETRAS": // el jugador ha puesto letras
+			System.out.println("cambio_letras wb socket");
+			JSONArray arrJson = jso.getJSONArray("letters");
+			Character[] letters = new Character[arrJson.length()];
+			System.out.println(letters.length);
+			for (int i = 0; i < letters.length; i++) {
+				System.out.println(arrJson.get(i));
+				letters[i] = arrJson.getString(i).charAt(0);
+			}
+			match.changeLetters(session.getId(), letters);
 			break;
-		case "PASO_TURNO": //el jugador cambiar el turno
+		case "PASO_TURNO": // el jugador cambiar el turno
 			System.out.println("Paso turno");
 			match.toggleTurn(session.getId());
 			break;
-		case "ABANDONO": //el jugador ha puesto letras
+		case "ABANDONO": // el jugador ha puesto letras
 			System.out.println("Abandono");
 			match.giveUp(session.getId());
 			break;
-		
+
 		}
 	}
 
@@ -64,8 +71,7 @@ public class WSServer extends TextWebSocketHandler {
 		JSONObject jso = new JSONObject();
 		jso.put("TYPE", "ERROR");
 		jso.put("MESSAGE", message);
-		WebSocketMessage<?> wsMessage=new TextMessage(jso.toString());
+		WebSocketMessage<?> wsMessage = new TextMessage(jso.toString());
 		session.sendMessage(wsMessage);
 	}
 }
-

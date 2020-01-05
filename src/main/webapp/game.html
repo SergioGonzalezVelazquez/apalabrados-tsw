@@ -88,7 +88,44 @@
     </div>
   </div>
 
-  <!-- CONTENEDOR GENERAL -->
+  <!-- MENÚ PRINCIPAL (SIN TABLERO) -->
+  <div class="container-fluid" data-bind="hidden: shouldShowBoard">
+    <div class="row my-5 main-menu" id="mainMenu">
+      <div class="col-lg-3 col-sm-12 p-0">
+        <h4>Nueva Partida</h4>
+
+      </div>
+      <div class="col-lg-3 col-sm-12 p-0">
+        <h4>En Juego</h4>
+      </div>
+
+
+      <div class="col-lg-3 col-sm-12 p-0">
+        <h4>Recientes</h4>
+        <div class="row match-info mx-auto my-3">
+          <div class="col-3 border-right border-ligh">
+            <img src="/assets/images/M.svg">
+          </div>
+          <div class="col-9">
+            <div class="row-sm-12">
+              <span>Ganado</span>
+              <span>Ganado</span>
+            </div>
+            <span>jugador1: 80p</span><br>
+            <span>tú: 100p</span>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="col-lg-3 col-sm-12 p-0">
+        <h4>Resumen</h4>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- CONTENEDOR GENERAL DE PARTIDA (TABLERO) -->
   <div class="container-fluid" data-bind="visible: shouldShowBoard">
     <div class="row mx-0">
       <!-- Col 1: Tablero  -->
@@ -120,8 +157,8 @@
         <div class="row mx-0 pb-1 letters-wrapper">
           <ul class="letters">
             <!-- ko foreach : panel -->
-            <li data-bind="draggable: $data"><img data-bind="attr: { src: '/assets/images/' + $data + '.svg'}"
-                alt="$data"></li>
+            <li data-bind="draggable: $data, sortable: $data"><img
+                data-bind="attr: { src: '/assets/images/' + $data.letter() + '.svg'}" alt="$data.letter()"></li>
             <!-- /ko -->
           </ul>
         </div>
@@ -150,7 +187,7 @@
                 play_arrow
               </i><br><span>Jugar</span></button>
 
-            <button type="button" id="shuffle" class="btn btn-dark"> <i class="material-icons">
+            <button type="button" id="shuffle" class="btn btn-dark" data-bind="click: $root.mezclar"> <i class="material-icons">
                 shuffle
               </i><br><span>Mezclar</span></button>
 
@@ -291,15 +328,16 @@
   <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogCambioLetras">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content letras-modal">
-        <div class="modal-body cambioLetras">
-          <span class="title">Seleccione las letras que desea cambiar</span><br>
+        <div class="modal-body cambioLetras" style="text-align: center;">
+          <h5 class="title">Seleccione las letras que desea cambiar</h5><br>
           <!-- ko using : tablero -->
           <ul>
-            <!-- ko foreach : panel -->
+            <!-- ko foreach :panel -->
             <li>
-              <input type="checkbox" data-bind="attr: {id: 'myCheckbox' + $index()}" />
-              <label data-bind="attr: {for: 'myCheckbox' + $index()}">
-                <img data-bind="attr: { src: '/assets/images/' + $data + '.svg'}" alt="$data" />
+              <input type="checkbox"
+                data-bind="attr: {id: 'checkbox' + $index(), value: $index()}, checked: $root.lettersToChange" />
+              <label data-bind="attr: {for: 'checkbox' + $index()}">
+                <img data-bind="attr: { src: '/assets/images/' + $data.letter() + '.svg'}" alt="$data.letter()" />
               </label>
             </li>
             <!-- /ko -->
@@ -349,7 +387,7 @@
   <!-- Notifications 
     https://codepen.io/damianmuti/pen/GEZoeG
   -->
-  <div class="notification" data-bind="visible: $root.showNotification, class: $root.notificationClass">
+  <div class="notification modal fade" data-bind="visible: $root.showNotification, class: $root.notificationClass">
     <div class="notification-icon">
       <!-- ko if: $root.notificationClass() == "notification-success"-->
       <i class="material-icons">

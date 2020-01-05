@@ -6,7 +6,31 @@ function GameViewModel(user) {
     this.shouldShowBoard = ko.observable(false);
     this.isLoading = ko.observable(false);
 
-    //jQuery dialogs 
+    /***********************************
+     * Data bindings
+     ***********************************/
+
+    //User (Player 1) properties
+    this.player1 = ko.observable(new Player(ko, user.userName, user.email, user.photo));
+
+    //Player 2 properties
+    this.player2 = ko.observable(new Player(ko));
+
+    //Tablero
+    this.tablero = ko.observable(new Tablero(ko));
+    console.log("tablero:")
+    console.log(self.tablero().casillas())
+
+    //Controller for Popups
+    this.shouldShowPopup = ko.observable(false);
+
+    //Movement history. Initially an empty array
+    this.movementHistory = ko.observableArray();
+
+
+    /***********************************
+     * jQuery dialogs and modals
+     ***********************************/
     ko.bindingHandlers.modal = {
         init: function (element, valueAccessor) {
             $(element).modal({
@@ -17,24 +41,10 @@ function GameViewModel(user) {
 
             var value = valueAccessor();
             if (ko.isObservable(value)) {
-                // Update 28/02/2018
-                // Thank @HeyJude for fixing a bug on
-                // double "hide.bs.modal" event firing.
-                // Use "hidden.bs.modal" event to avoid
-                // bootstrap running internal modal.hide() twice.
                 $(element).on('hidden.bs.modal', function () {
                     value(false);
                 });
             }
-
-            // Update 13/07/2016
-            // based on @Richard's finding,
-            // don't need to destroy modal explicitly in latest bootstrap.
-            // modal('destroy') doesn't exist in latest bootstrap.
-            // ko.utils.domNodeDisposal.addDisposeCallback(element, function () {
-            //    $(element).modal("destroy");
-            // });
-
         },
         update: function (element, valueAccessor) {
             var value = valueAccessor();
@@ -49,50 +59,152 @@ function GameViewModel(user) {
     this.showDialogLoser = ko.observable(false);
     this.showDialogWinner = ko.observable(false);
     this.showDialogCambioLetras = ko.observable(false);
+    this.showDialogProfileImage = ko.observable(false);
 
-    //CAMBIO DE LETRAS
-    this.changeLetters = ko.observableArray();
+    this.closeModals = function () {
+        self.showDialogLoser(false);
+        self.showDialogWinner(false);
+        self.showDialogCambioLetras(false);
+        self.showDialogProfileImage(false);
+    }
+
+    this.displayDialogWinner = function () {
+        self.closeModals();
+        self.showDialogWinner(true);
+    }
+
+    this.displayDialogLoser = function () {
+        self.closeModals();
+        self.showDialogLoser(true);
+    }
+
+    /***********************************
+     * Notificaciones
+     ***********************************/
+    this.notificationClass = ko.observable();
+    this.notificationMessage = ko.observable();
+    this.showNotification = ko.observable(false);
+    this.displayNotification = function (clazz, message) {
+        self.notificationClass(clazz);
+        self.notificationMessage(message);
+        self.showNotification(true)
+    }
+    this.closeNotification = function () {
+        self.showNotification(false);
+    }
+
+    /***********************************
+     * Cambiar imagen de perfil
+     ***********************************/
+
+    //Drag and drop no implementado:
+    //https://www.smashingmagazine.com/2018/01/drag-drop-file-uploader-vanilla-js/
+    //https://codepen.io/safrazik/pen/uIrwC
+
+    this.selectProfileImage = function () {
+        self.closeModals();
+        self.showDialogProfileImage(true);
+    }
+
+    //base 64 encoded file
+    this.photoEncoded = ko.observable();
+    this.photoUrl = ko.observable();
+
+    //https://stackoverflow.com/questions/27958047/file-upload-using-knockout-js
+    this.fileUpload = function (data, e) {
+        var file = e.target.files[0];
+        self.photoUrl(file.name)
+        var reader = new FileReader();
+
+        reader.onloadend = function (onloadend_e) {
+            var result = reader.result;
+            self.photoEncoded(result);
+            console.log(result)
+        };
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    };
+
+    this.updateImage = function () {
+        self.closeModals();
+
+
+        if (self.photoEncoded()) {
+            //Send image to server
+            var info = {
+                base64Image: self.photoEncoded(),
+            };
+
+            var data = {
+                data: info,
+                url: "/updatePhoto",
+                type: "post",
+                success: updatePhotoOK,
+                error: updatePhotoError
+            };
+            $.ajax(data);
+        } else {
+            self.displayNotification("notification-error", "No ha seleccionado ninguna imagen");
+        }
+    }
+
+    function updatePhotoOK(response) {
+        self.player1().photo(self.photoEncoded())
+        self.photoEncoded(null)
+        self.photoUrl(null)
+        self.displayNotification("notification-success", "Foto de perfil actualizada");
+    }
+
+    function updatePhotoError(response) {
+        self.displayNotification("notification-error", "No se pudo actualizar la foto de perfil");
+        self.photoEncoded(null)
+        self.photoUrl(null)
+    }
+
+
+    /***********************************
+     * Cambio de letras
+     ***********************************/
+
+    //Este array contiene las letras que se marcan para ser cambiadas 
+    //cuando se abre el popup para seleccionar letras. Lo que se guarda en él no
+    //es la letra, sino la posición de la letra dentro del panel. Lo hacemos
+    //así para evitar problemas cuando hay varias letras iguales y solo se quiere 
+    //cambiar una de ellas. 
+    this.lettersToChange = ko.observableArray();
 
     this.cambiarLetrasCancel = function () {
         self.showDialogCambioLetras(false);
+        self.lettersToChange.removeAll();
     }
 
     this.cambiarLetrasConfirm = function () {
         self.showDialogCambioLetras(false);
+        console.log("letras a cambiar:")
+        console.log(self.lettersToChange())
+        var lettersIndex = self.lettersToChange.sorted();
 
-        console.log(self.changeLetters());
+        //Cambiar valor númerico (posición en el panel), por letra
+        var letters = lettersIndex.map(function (index) {
+            return self.tablero().panel()[parseInt(index)].letter();
+        });
+
+        console.log(letters)
 
         var mensaje = {
             type: "CAMBIO_LETRAS",
             idPartida: sessionStorage.getItem('idPartida'),
-            letters: []
+            letters: letters
         };
+        self.ws.send(JSON.stringify(mensaje));
     }
 
-    this.submitEnd = function () {
-        self.showDialogLoser(false);
-        self.showDialogWinner(false);
-        endMatch();
-    }
 
-    //User (Player 1) properties
-    this.player1 = ko.observable(new Player(ko, user.userName, user.email, user.photo));
-
-    //Player 2 properties
-    this.player2 = ko.observable(new Player(ko));
-
-    //Tablero
-    this.tablero = ko.observable(new Tablero(ko));
-
-    //Controller for Popups
-    this.shouldShowPopup = ko.observable(false);
-
-
-    //Movement history. Initially an empty array
-    this.movementHistory = ko.observableArray();
-
-
-    //Timer.
+    /***********************************
+     * Timer
+     ***********************************/
     //https://stackoverflow.com/questions/22080400/hours-minutes-seconds-knockout-countdown-timer
     self.timer = ko.observable(120);
 
@@ -133,31 +245,13 @@ function GameViewModel(user) {
     }
     //End of timer
 
-
-    //Dragging, Dropping, and Sorting With observableArrays
+    /***********************************
+     * Dragging and Dropping
+     ***********************************/
+    //https://jqueryui.com/draggable/
+    //https://jqueryui.com/droppable/
     //http://www.knockmeout.net/2011/05/dragging-dropping-and-sorting-with.html
-    //Sortable list
-    /*
-    ko.bindingHandlers.sortableList = {
-        init: function (element, valueAccessor) {
-            var list = valueAccessor();
-            $(element).sortable({
-                update: function (event, ui) {
-                    //retrieve our actual data item
-                    var item = ui.item.tmplItem().data;
-                    //figure out its new position
-                    var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
-                    //remove the item and add it back in the right spot
-                    if (position >= 0) {
-                        list.remove(item);
-                        list.splice(position, 0, item);
-                    }
-                }
-            });
-        }
-    };
-    */
-
+    this.fichaEnMovimiento = ko.observable();
 
     //Draggable element
     ko.bindingHandlers.draggable = {
@@ -165,11 +259,31 @@ function GameViewModel(user) {
             $(element).draggable({
                 scroll: false,
                 revert: "invalid",
-                snap: ".scrabble-td"
+                snap: ".scrabble-td",
+
+                //Evento lanzado antes de que un jugador mueva una ficha.
+                //data es una ficha. Le ponemos su atributo casilla a null. Esto signfica
+                //que al levantar una ficha (drag) deja de estar asignada a una casilla, si lo estaba.
+                //Si la ficha estaba en el panel, no tiene ningún efecto, porque casilla ya era null
+                //data.casilla(null);
+                start: function () {
+                    if (data.casilla() !== null) {
+
+                        //La quitamos de casillas jugadas
+                        console.log(self.tablero().casillasJugadas());
+                        self.tablero().casillasJugadas.remove(function (casillaJugada) {
+                            return ((casillaJugada.row == data.casilla().row) && (casillaJugada.column == data.casilla().column));
+                        });
+                        data.casilla().ficha(null);
+                        data.casilla(null);
+                    }
+                    self.fichaEnMovimiento(data);
+                }
                 //grid: [40,40]
             });
         }
     };
+
 
     //Droppable element
     ko.bindingHandlers.droppable = {
@@ -177,23 +291,31 @@ function GameViewModel(user) {
             $(element).droppable({
 
                 accept: function (dropedElement) {
-                    // comprueba si hay una ficha en esa casilla
-                    if(data.letter != ''){
+                    // comprueba si hay una ficha en esa casilla con id temporal
+                    /*
+                    if (data.letter != '') {
                         var row = ui.draggable.id.split(",")[1];
                         var column = ui.draggable.id.split(",")[2];
-                        var bool=true;
+                        var bool = true;
                         self.tablero().casillasJugadas().forEach(function (item, index, object) {
                             if (item.row == row && item.column == column) {
-                                bool=false;
+                                bool = false;
                             }
                         });
                         return bool;
-                    }else{
+                    } else {
                         return true;
                     }
+                    */
+                    if (data.fixed()) {
+                        return false;
+                    }
+                    return (data.ficha() === null);
+
                 },
                 //start: function (event, ui) {},
                 drop: function (event, ui) {
+                    /*
                     // Metodo para comparar si la ficha tiene el atributo onboard
                     // si tiene elatributo on board se revisa la posicion que tenia 
                     // y se elimina de casillas jugadas para añadir la nueva posicion
@@ -228,12 +350,54 @@ function GameViewModel(user) {
                         // esto se pondrá al final data.letter = letter;
                         self.tablero().casillasJugadas().push(data);
                     }
+                    */
+                    ui.draggable.removeClass('onboard');
+                    ui.draggable.toggleClass('onboard');
+
+                    //data: objeto Casilla sobre el que se suelta la ficha
+                    //element: elemento HTML sobre el que se suelta la ficha (td)
+                    var letter = self.fichaEnMovimiento().letter();
+                    console.log("Has soltado la letra " + letter + " en fila:" + data.row + ", col:" + data.column);
+                    self.fichaEnMovimiento().casilla(data);
+                    data.ficha(self.fichaEnMovimiento());
+                    self.fichaEnMovimiento(null);
+                    self.tablero().casillasJugadas().push(data);
                 },
             });
         }
     };
 
-    //Loading circle code
+    /***********************************
+     * Sortable
+     ***********************************/
+    //Permite reordenar las fichas en el panel 
+    //utilizando drag and drop
+    //https://jqueryui.com/sortable/
+    //http://www.knockmeout.net/2011/05/dragging-dropping-and-sorting-with.html
+    ko.bindingHandlers.sortable = {
+        init: function (element, valueAccessor) {
+            var list = valueAccessor();
+            $(element).sortable({
+                update: function (event, ui) {
+                    console.log("update")
+                    //retrieve our actual data item
+                    var item = ui.item.tmplItem().data;
+                    //figure out its new position
+                    var position = ko.utils.arrayIndexOf(ui.item.parent().children(), ui.item[0]);
+                    //remove the item and add it back in the right spot
+                    if (position >= 0) {
+                        list.remove(item);
+                        list.splice(position, 0, item);
+                    }
+                    ui.item.remove();
+                }
+            });
+        }
+    };
+
+    /***********************************
+     * Loading circle animation
+     ***********************************/
     var displayValue = function (element, valueAccessor) {
         var value = ko.utils.unwrapObservable(valueAccessor());
         var isCurrentlyVisible = !(element.style.display == "none");
@@ -257,8 +421,9 @@ function GameViewModel(user) {
         }
     };
 
-
-    //Logout controller
+    /***********************************
+     * Logout controller
+     ***********************************/
     this.logout = function () {
         var data = {
             data: {},
@@ -280,7 +445,9 @@ function GameViewModel(user) {
         console.log("Logout ERROR")
     }
 
-    //Create and join games
+    /***********************************
+     * Create and join games
+     ***********************************/
     this.createGame = function () {
         console.log("createGame")
         var data = {
@@ -305,18 +472,34 @@ function GameViewModel(user) {
         $.ajax(data);
     }
 
+    function gameError(response) {
+        console.log(response.responseText)
+    }
+
+
+    /***********************************
+     * Finalizar partida
+     ***********************************/
+    this.submitEnd = function () {
+        self.closeModals();
+        endMatch();
+    }
+
     function endMatch() {
+        self.lettersToChange([]);
+        self.movementHistory([]);
+        self.tablero(new Tablero(ko));
         self.shouldShowBoard(false);
-        sessionStorage.removeItem("sessionStorage");
+        sessionStorage.removeItem("idPartida");
         self.stopCountdown();
         self.player2 = ko.observable();
 
     }
 
-    function gameError(response) {
-        console.log(response.responseText)
-    }
 
+    /***********************************
+     * Crear ws y controlar mensajes entrantes
+     ***********************************/
     function gameOK(response) {
         self.ws = new WebSocket("ws://localhost:8080/wsServer");
         response = JSON.parse(response);
@@ -335,10 +518,11 @@ function GameViewModel(user) {
             }
         }
         self.ws.onerror = function (event) {
-            console.log("on error");
+            self.displayNotification("notification-error", `on error`);
         }
         self.ws.onclose = function (event) {
-            console.log("on close");
+            self.displayNotification("notification-warning", `Websocket cerrado`);
+            endMatch();
         }
         self.ws.onmessage = function (event) {
 
@@ -362,7 +546,8 @@ function GameViewModel(user) {
                 //Binding letters
                 var letters = jso.letters.split(' ');
                 for (var i = 0; i < letters.length; i++) {
-                    self.tablero().panel.push(letters[i]);
+                    //self.tablero().panel.push(letters[i]);
+                    self.tablero().panel.push(new Ficha(ko, letters[i], false, false));
                 }
 
                 //Iniciar temporizador
@@ -416,7 +601,23 @@ function GameViewModel(user) {
 
                 //Cambio de letras
             } else if (jso.type == "NEW_LETTERS") {
-                console.log("new letters")
+                console.log("new letters recibidas");
+                console.log(jso)
+
+                var newLetters = jso.letters;
+
+                if (newLetters && newLetters.length > 0) {
+                    newLetters = newLetters.split(" ");
+                    for (var i = 0; i < newLetters.length; i++) {
+                        var indexToReplace = self.lettersToChange()[i];
+                        self.tablero().panel()[indexToReplace].letter(newLetters[i]);
+                    }
+                    self.displayNotification("notification-success", `Recibidas ${newLetters.length} nuevas letras: ` + jso.letters);
+                } else {
+                    self.displayNotification("notification-error", `No se pudo realizar el cambio de letras. Puede que la partida no disponga de letras restantes suficientes`);
+                }
+
+                self.lettersToChange.removeAll();
 
             }
 
@@ -424,22 +625,73 @@ function GameViewModel(user) {
             else if (jso.type == "MATCH_END") {
                 console.log("match end")
                 if (jso.winner) {
-                    self.showDialogWinner(true);
+                    self.displayDialogWinner();
                 } else {
-                    self.showDialogLoser(true);
+                    self.displayDialogLoser();
                 }
 
             }
         }
     }
 
-    this.llamar = function () {
-        console.log("llamar")
-        $(".letters li").draggable("enable");
-    }
+
+
+    /***********************************
+     * CONTROLES DEL JUEGO
+     ***********************************/
 
     /**
-     * Panel de botones: JUGAR
+     * Panel de botones: Llamar
+     * Las letras que se han colocado en el tablero vuelven de nuevo al panel
+     */
+    this.llamar = function () {
+        //Borrar casillas jugadas y quitarlas del tablero
+        self.tablero().casillasJugadas.remove(function (casillaJugada) {
+            casillaJugada.ficha().casilla(null);
+            casillaJugada.ficha(null);
+            return true;
+        });
+
+        $(".letters li").animate({
+            top: "0px",
+            left: "0px"
+        });
+    }
+
+
+    /**
+     * Panel de botones: MEZCLAR
+     * Si el jugador desea que su cliente reeordene aleatoriamente las letras que 
+     * tiene en su panel
+     */
+    this.mezclar = function () {
+        //Ver que elementos son ordenables y su posición en el panel
+        var elementosOrdenables = [];
+        var posicionesOrdenables = [];
+        for (var i = 0; i < self.tablero().panel().length; i++) {
+            if (self.tablero().panel()[i].casilla() === null) {
+                elementosOrdenables.push(self.tablero().panel()[i]);
+                posicionesOrdenables.push(i);
+            }
+        }
+        //Ordenar aleatoriamente los elementos ordenables
+        posicionesOrdenables = shuffleArray(posicionesOrdenables);
+
+        elementosOrdenables.forEach(function (fichaOrdenable) {
+            var index = posicionesOrdenables.pop();
+            self.tablero().panel.replace(self.tablero().panel()[index], fichaOrdenable);
+
+        });
+    }
+
+
+    /**
+     * Panel de botones: JUGAR.
+     * El servidor valida si todas las palabras que se puedan formar son correctas.
+     * Si alguno no es correcta, se muestra al usuario un mensaje de error, pero el turno
+     * sigue siendo de este jugador.
+     * Si todas las palabras son correctas, el servidor informa de la puntuación que se conseguirá
+     * y le solicita al cliente confirmación de la jugada.
      */
     this.jugar = function () {
         if (self.player1().turn) {
@@ -449,29 +701,33 @@ function GameViewModel(user) {
                     idPartida: sessionStorage.getItem('idPartida'),
                     jugada: []
                 };
-
+                console.log(self.tablero().casillasJugadas())
                 self.tablero().casillasJugadas().forEach(function (element) {
+                    console.log("(" + element.row + ", " + element.column);
+                    console.log("letra: " + element.ficha().letter());
                     var casilla = {
                         row: element.row,
                         column: element.column,
-                        letter: element.letter,
+                        letter: element.ficha().letter(),
                     }
                     mensaje['jugada'].push(casilla);
                 });
+                console.log("Jugada: ")
+                console.log(JSON.stringify(mensaje))
                 self.ws.send(JSON.stringify(mensaje));
 
                 console.log(self.tablero().casillasJugadas())
             } else {
-                //Error
-                self.showLoserModal();
-                console.log("no hay jugadas")
+                console.log("no hay movimiento")
+                self.displayNotification("notification-warning", `No has hecho ningún movimiento`);
             }
 
         } else {
+            self.displayNotification("notification-warning", "No tienes el turno");
             console.log("no tienes el turno")
         }
-
     }
+
 
     //Panel de botones: JUGAR
     this.pasar = function () {
@@ -487,14 +743,34 @@ function GameViewModel(user) {
         }
     }
 
-    //Panel de botones: CAMBIAR
+    /**
+     * Panel de botones: PASAR
+     * Pasar el turno al siguiente jugador
+     */
+    this.pasar = function () {
+        if (self.player1().turn) {
+            var mensaje = {
+                type: "PASO_TURNO",
+                idPartida: sessionStorage.getItem('idPartida'),
+            };
+            self.ws.send(JSON.stringify(mensaje));
+
+        } else {
+            console.log("no tienes el turno")
+        }
+    }
+
+    /**
+     * Panel de botones: CAMBIAR LETRAS
+     * 
+     */
     this.cambiar = function () {
         self.showDialogCambioLetras(true)
     }
 
-
     /**
-     * Panel de botones: RENDIRSE
+     * Panel de botones: RENDIRSE.
+     * Si un jugador se rinde se le da la partida por perdida.
      */
     this.abandonar = function () {
         console.log("rendirse")
@@ -504,7 +780,6 @@ function GameViewModel(user) {
         };
         self.ws.send(JSON.stringify(mensaje));
     }
-
 }
 
 
@@ -674,11 +949,27 @@ class Casilla {
         this.tablero = tablero;
         this.label = ko.observable('');
         this.letter = '';
+        //Indica si la casilla está definida por una
+        //letra confirmada por el servidor
+        this.fixed = ko.observable(false);
         this.clazz = ko.observable("scrabble-td");
         this.row = row;
         this.column = column;
+        this.ficha = ko.observable(null);
     }
 }
+
+/**
+ * Clase Ficha
+ */
+class Ficha {
+    constructor(ko, letra, inTablero, fixed) {
+        this.inTablero = ko.observable(inTablero);
+        this.letter = ko.observable(letra);
+        this.casilla = ko.observable(null);
+    }
+}
+
 
 
 //initializeNavbar();
@@ -691,12 +982,37 @@ if (!user) {
 }
 
 
-/**
+/***********************************
  * UTILS
- */
+ ***********************************/
 function addZero(i) {
     if (i < 10) {
         i = "0" + i;
     }
     return i;
+}
+
+/**
+ * https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+ * 
+ * Fisher-Yates (aka Knuth) Shuffle
+ */
+function shuffleArray(array) {
+    var currentIndex = array.length,
+        temporaryValue, randomIndex;
+
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+
+        // Pick a remaining element...
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex -= 1;
+
+        // And swap it with the current element.
+        temporaryValue = array[currentIndex];
+        array[currentIndex] = array[randomIndex];
+        array[randomIndex] = temporaryValue;
+    }
+
+    return array;
 }

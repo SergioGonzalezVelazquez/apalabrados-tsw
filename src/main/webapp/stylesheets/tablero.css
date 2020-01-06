@@ -274,6 +274,44 @@
   height: auto;
 }
 
+#jugadaModal .modal-content {
+  background-color: rgba(0, 0, 0, .7);
+  font-size: 1.5em;
+  text-align: center;
+  color: #ffffff;
+}
+
+#jugadaModal .modal-footer {
+  display: inline;
+  border-top: none;
+  padding-top: 4em;
+}
+
+#jugadaModal ul {
+  list-style-type: none;
+  margin-top: 1em;
+  padding-inline-start: 0px;
+}
+
+#jugadaModal span {
+  font-size: 0.8em;
+}
+
+#jugadaModal .image-container {
+  position: relative;
+  text-align: center;
+  color: white;
+}
+
+#jugadaModal .centered-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
 .imagenPerfil-dropArea {
   border: 4px dashed #ccc;
   padding: 2em;
@@ -567,16 +605,19 @@
     https://codepen.io/hmps/pen/sCnbm
 -----------------------------------------------------------*/
 .notification {
-  display: table;
-  position: relative;
-  margin: 40px auto 0;
   width: 500px;
-
+  /* display: table; */
+  left: 40%;
+  top: 30%;
+  position: absolute;
+  /* margin: 40px auto 0;*/
   color: #fff;
   transition: all 0.2s ease;
 
+
   -webkit-animation: notificationAnimation 3s forwards;
   animation: notificationAnimation 3s forwards;
+
 }
 
 @keyframes notificationAnimation {

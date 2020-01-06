@@ -84,10 +84,7 @@ function UserViewModel() {
 		$("#message").attr("style", "color:green");
 		self.message("Si hay un usuario registrado con el correo " + self.userEmail() +
 			" recibirás un correo con las instrucciones para actualizar la contraseña");
-
-		console.log("msg updatePwd enviado")
 	}
-
 
 
 	function singupOK(response) {
@@ -109,8 +106,14 @@ function UserViewModel() {
 	}
 
 	function error(response) {
-		$("#message").attr("style", "color:red");
-		self.message(response.responseText);
+	
+		$("#message").attr("style", "color:red; font-weight: bold;");
+		if(response.responseJSON && response.responseJSON.message){
+			self.message(response.responseJSON.message);
+		}else{
+			self.message("Error. No se pudo iniciar sesión")
+		}
+
 	}
 }
 

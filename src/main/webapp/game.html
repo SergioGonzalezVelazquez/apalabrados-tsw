@@ -138,7 +138,10 @@
               <!-- ko foreach : { data: fila, as: 'celda' } -->
               <!-- ko using : celda -->
               <td data-bind="class : clazz, droppable: $data">
-                <label data-bind="html : label"></label>
+                <label data-bind="html : label, hidden: $data.fixed()"></label>
+                <img
+                  data-bind="visible : $data.fixed(), attr: { src: '/assets/images/dark/' + $data.letter() + '_dark.svg'}"
+                  style="height: 2em;">
               </td>
               <!-- /ko -->
               <!-- /ko -->
@@ -187,7 +190,8 @@
                 play_arrow
               </i><br><span>Jugar</span></button>
 
-            <button type="button" id="shuffle" class="btn btn-dark" data-bind="click: $root.mezclar"> <i class="material-icons">
+            <button type="button" id="shuffle" class="btn btn-dark" data-bind="click: $root.mezclar"> <i
+                class="material-icons">
                 shuffle
               </i><br><span>Mezclar</span></button>
 
@@ -243,9 +247,10 @@
                 <br>
                 <span class="txt-puntos">0</span>
               </div>
-              <div class="col-6 border border-ligh"><strong>Fichas</strong> restantes
+              <div class="col-6 border border-ligh" data-bind="using: $root.tablero, as: 'tablero'">
+                <strong>Fichas</strong> restantes
                 <br>
-                <span class="txt-puntos">0</span>
+                <span class="txt-puntos" data-bind="text: tablero.availablePieces()"></span>
               </div>
             </div>
           </div>
@@ -318,7 +323,30 @@
           <span>Has ganado la partida</span><br>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary btn-xs" data-bind="click : submitEnd">Close</button>
+          <button type="button" class="btn btn-primary btn-xs" data-bind="click : submitEnd">Aceptar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialog: Confirmar jugada -->
+  <div id="jugadaModal" class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogConfirmarJugada">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body" data-bind="with: $root.resultadoJugada, as: 'resultado'">
+          <h4>Confirma tu jugada</h4><br>
+          <div class="image-container">
+            <img src="assets/images/icons/estrella.png" style="height: 4em;" alt="score"><br>
+            <div class="centered-text" data-bind="text: resultado.puntosTotal"></div>
+          </div>
+          <ul data-bind="foreach : { data: palabras, as: 'palabra' }">
+            <li><span data-bind="text: palabra"></span></li>
+          </ul>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger btn-xs" data-bind="click : $root.cancelarJugada">Cancelar</button>
+          <button type="button" class="btn btn-success btn-xs"
+            data-bind="click : $root.confirmarJugada">Confirmar</button>
         </div>
       </div>
     </div>
@@ -384,10 +412,36 @@
     </div>
   </div>
 
+  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogProfileImage">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body image-selector">
+          <img class="myImage"
+            data-bind="attr: {src: $root.photoEncoded() || $root.player1().photo || 'assets/images/default-user-icon.jpg'}" />
+          <!-- <input data-bind="event: {change: $root.fileUpload}" type="file" accept="image/*" class="fileContainer" />-->
+          <div class="custom-file" id="customFile">
+            <input data-bind="event: {change: $root.fileUpload}" type="file" class="custom-file-input" accept="image/*">
+            <label class="custom-file-label" data-bind="text: $root.photoUrl() || 'Seleccionar imagen'"
+              for="exampleInputFile">
+            </label>
+          </div>
+
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-ligh btn-xs" data-bind="click : updateImage">Guardar</button>
+          <button type="button" class="btn btn-dark btn-xs" data-bind="click : closeModals">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- Notifications 
     https://codepen.io/damianmuti/pen/GEZoeG
   -->
-  <div class="notification modal fade" data-bind="visible: $root.showNotification, class: $root.notificationClass">
+  <div id="notification" class="notification"
+    data-bind="visible: $root.showNotification, class: $root.notificationClass">
     <div class="notification-icon">
       <!-- ko if: $root.notificationClass() == "notification-success"-->
       <i class="material-icons">

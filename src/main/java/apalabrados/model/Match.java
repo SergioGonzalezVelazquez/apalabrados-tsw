@@ -3,6 +3,9 @@ package apalabrados.model;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.Map.Entry;
 
@@ -10,17 +13,20 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
 import java.util.UUID;
 
-public class Match implements LetterDistribution {
+public class Match {
 	private String id;
 	private User playerA;
 	private User playerB;
+	private Map<String, Integer> scores;
 	private User gameTurn;
 	private Board board;
 
-	private ArrayList<Character> letters = new ArrayList();
+	// Listado de casillas que están pendientes de ser confirmadas.
+	// Esto es, cuando el servidor valida una jugada pero espera confirmación.
+	private ArrayList<Square> pendingSquares;
+	private MovementResult pendingMovement;
 
 	public Match() {
 		this.id = UUID.randomUUID().toString();
@@ -39,14 +45,21 @@ public class Match implements LetterDistribution {
 	}
 
 	public void start() {
-		this.initializeLetters();
+		this.pendingSquares = new ArrayList();
+		this.scores = new HashMap<String, Integer>();
+		this.scores.put(this.playerA.getSession().getId(), 90);
+		this.scores.put(this.playerB.getSession().getId(), 78);
+		this.board = new Board();
 		this.gameTurn = new Random().nextBoolean() ? this.playerA : this.playerB;
 
 		// Message to player A
 		try {
 			JSONObject jsa = new JSONObject();
+			System.out.println(board.availableLetters());
 			jsa.put("type", "START");
-			jsa.put("letters", getLetters(7));
+			jsa.put("letters", board.getLetters(7));
+			// Mandamos las fichas restantes menos las que se le enviarán al jugador B
+			jsa.put("availablePieces", board.availableLetters() - 7);
 			jsa.put("turn", this.gameTurn == playerA ? true : false);
 			jsa.put("opponent", this.playerB.getUserName());
 			this.playerA.sendMessage(jsa.toString());
@@ -62,7 +75,8 @@ public class Match implements LetterDistribution {
 		try {
 			JSONObject jsb = new JSONObject();
 			jsb.put("type", "START");
-			jsb.put("letters", getLetters(7));
+			jsb.put("letters", board.getLetters(7));
+			jsb.put("availablePieces", board.availableLetters());
 			jsb.put("turn", this.gameTurn == playerB ? true : false);
 			jsb.put("opponent", this.playerA.getUserName());
 			this.playerB.sendMessage(jsb.toString());
@@ -70,30 +84,96 @@ public class Match implements LetterDistribution {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
-	private void initializeLetters() {
-		for (Entry<Character, Integer> entry : LETTER_QUANTITY.entrySet()) {
-			for (int i = 0; i < entry.getValue(); i++) {
-				letters.add(entry.getKey());
-			}
+	public void playerPlays(String idSession, JSONArray jsaMovement) throws Exception {
+		MovementResult result;
+		User player;
+		this.pendingMovement = null;
+
+		if (this.playerA.getSession().getId().equals(idSession)) {
+			player = playerA;
+		} else {
+			player = playerB;
 		}
-		// Shuffle letras
-		Collections.shuffle(this.letters);
+
+		if (player != this.gameTurn) {
+			result = new MovementResult("RESULT");
+			result.addException("No tienes el turno");
+			player.sendMessage(result);
+		} else {
+			ArrayList<JSONObject> movement = new ArrayList<>();
+
+			for (int i = 0; i < jsaMovement.length(); i++)
+				movement.add(jsaMovement.getJSONObject(i));
+			result = this.board.movement(movement);
+
+			// Si alguna palabra no es correcta, el turno sigue siendo del jugador.
+			System.out.println(result.toString());
+			player.sendMessage(result);
+
+			if (result.invalids() == 0 && result.exceptions() == 0) {
+				// Guardar el movimiento pendiente
+				this.pendingMovement = result;
+
+				// Guardar las casillas por confirmar
+				JSONObject jsoCasilla;
+				Square square;
+				for (int i = 0; i < jsaMovement.length(); i++) {
+					jsoCasilla = jsaMovement.getJSONObject(i);
+					square = new Square(jsoCasilla.getInt("row"), jsoCasilla.getInt("col"),
+							jsoCasilla.getString("letter").charAt(0));
+					this.pendingSquares.add(square);
+				}
+
+				System.out.println("casillas pendientes: " + this.pendingSquares.size());
+			}
+
+			// opponent.sendMessage(result);
+		}
 	}
 
-	private String getLetters(int n) {
-		String r = "";
-		for (int i = 0; i < n; i++)
-			r = r + this.letters.remove(0) + " ";
+	public void acceptMovement(String idSession) throws Exception {
+		User player;
+		User opponent;
+		MovementResult result;
 
-		// Remove last space character
-		r = r.substring(0, r.length() - 1);
-		return r;
-	}
+		if (this.playerA.getSession().getId().equals(idSession)) {
+			player = playerA;
+			opponent = playerB;
+		} else {
+			player = playerB;
+			opponent = playerA;
+		}
+		if (player != this.gameTurn) {
+			result = new MovementResult("RESULT");
+			result.addException("No tienes el turno");
+			player.sendMessage(result);
 
-	public void playerPlays(String idSession, JSONArray jsaJugada) throws Exception {
+		} else if (this.pendingMovement == null) {
+			result = new MovementResult("RESULT");
+			result.addException("No hay jugadas pendientes de confirmación");
+			player.sendMessage(result);
+
+		} else {
+			this.scores.put(player.getSession().getId(), this.pendingMovement.getPoints());
+			// Primero mandamos un mensaje al jugador que ha confirmado su jugada
+			this.pendingMovement.setType("MOVEMENT");
+			this.pendingMovement.setLetters(this.board.getLetters(this.pendingSquares.size()));
+			this.pendingMovement.setScore(this.scores.get(player.getSession().getId()));
+			player.sendMessage(this.pendingMovement);
+
+			// Después, notificamos al jugador que estaba esperando
+			this.pendingMovement.setType("OPPONENT_MOVEMENT");
+			this.pendingMovement.setLetters("");
+			this.pendingMovement.setScore(this.scores.get(player.getSession().getId()));
+			opponent.sendMessage(this.pendingMovement);
+
+			// Cambiar turno
+			this.gameTurn = (this.playerA == this.gameTurn ? this.playerB : this.playerA);
+			this.pendingMovement = null;
+			this.pendingSquares.clear();
+		}
 
 	}
 
@@ -111,31 +191,28 @@ public class Match implements LetterDistribution {
 		}
 
 		if (player != this.gameTurn) {
-			movement = new MovementResult();
+			movement = new MovementResult("MOVEMENT");
 			movement.addException("No tienes el turno");
 			player.sendMessage(movement);
 		} else {
 			// Primero mandamos un mensaje al jugador que ha pedido cambiar el turno
 			// confirmándole
 			this.gameTurn = (this.playerA == this.gameTurn ? this.playerB : this.playerA);
-			movement = new MovementResult(10, letters.size());
-			movement.setType("MOVEMENT");
-			movement.setTurn(false);
+			movement = new MovementResult(10, board.availableLetters());
 			player.sendMessage(movement);
 
 			// Después, notificamos al jugador que estaba esperando
-			movement = new MovementResult(10, letters.size());
+			movement = new MovementResult(10, board.availableLetters());
 			movement.setType("OPPONENT_MOVEMENT");
-			movement.setTurn(true);
 			opponent.sendMessage(movement);
 		}
 
 	}
 
-	public void giveUp(String idSession)  {
-		User player; //Loser
-		User opponent; //Winner
-		
+	public void giveUp(String idSession) {
+		User player; // Loser
+		User opponent; // Winner
+
 		if (this.playerA.getSession().getId().equals(idSession)) {
 			player = playerA;
 			opponent = playerB;
@@ -143,7 +220,7 @@ public class Match implements LetterDistribution {
 			player = playerB;
 			opponent = playerA;
 		}
-		
+
 		// Primero mandamos un mensaje al jugador que se ha rendido
 		try {
 			JSONObject jsLoser = new JSONObject();
@@ -154,7 +231,7 @@ public class Match implements LetterDistribution {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 		// Después, mandamos el mensaje al jugador que ha ganado
 		try {
 			JSONObject jsWinner = new JSONObject();
@@ -165,22 +242,20 @@ public class Match implements LetterDistribution {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-			
+
 	}
-	
-	public void changeLetters (String idSession, Character [] letters) {
-		System.out.println("changeLetters match " + letters.length);
+
+	public void changeLetters(String idSession, Character[] letters) {
 		User player = this.playerA.getSession().getId().equals(idSession) ? playerA : playerB;
-		
+
 		try {
 			JSONObject jsa = new JSONObject();
 			jsa.put("type", "NEW_LETTERS");
-			jsa.put("letters", getLetters(letters.length));
-			
-			//Devolver las letras del usuario al listado de letras
-			for (Character letter : letters)
-			{ 
-			    this.letters.add(letter);
+			jsa.put("letters", board.getLetters(letters.length));
+
+			// Devolver las letras del usuario al listado de letras
+			for (Character letter : letters) {
+				this.board.addLetter(letter);
 			}
 			player.sendMessage(jsa.toString());
 

@@ -41,16 +41,18 @@ public class WSServer extends TextWebSocketHandler {
 			break;
 
 		case "MOVIMIENTO": // el jugador ha puesto letras
-
 			System.out.println("Movimiento");
+			match.playerPlays(session.getId(), jso.getJSONArray("jugada"));
 			break;
+			
+		case "CONFIRMAR_JUGADA": //el jugador confirma la jugada después de la validación del servidor
+			match.acceptMovement(session.getId());
+			break;
+			
 		case "CAMBIO_LETRAS": // el jugador ha puesto letras
-			System.out.println("cambio_letras wb socket");
 			JSONArray arrJson = jso.getJSONArray("letters");
 			Character[] letters = new Character[arrJson.length()];
-			System.out.println(letters.length);
 			for (int i = 0; i < letters.length; i++) {
-				System.out.println(arrJson.get(i));
 				letters[i] = arrJson.getString(i).charAt(0);
 			}
 			match.changeLetters(session.getId(), letters);

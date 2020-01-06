@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import apalabrados.dao.PalabraRepository;
 import apalabrados.dao.TokenRepository;
 import apalabrados.dao.UserRepository;
 import apalabrados.model.User;
@@ -40,10 +41,18 @@ public class WebController {
 	private TokenRepository tokenRepo;
 	@Autowired
 	private UserRepository userRepo;
+	@Autowired
+	private PalabraRepository palabraRepo;
 	
 	private List<Match> pendingMatches = new ArrayList<>();
 	private EMailSenderService emailSender = new EMailSenderService();
 	public static ConcurrentHashMap<String, Match> inPlayMatches = new ConcurrentHashMap<>();
+	
+	@Autowired
+	public void loadPalabrasRepo() {
+		Manager.get().setPalabrasRepo(palabraRepo);
+		System.out.println("palabrasRepo cargado");
+	}
 
 	@RequestMapping("/signup")
 	public User signup(@RequestParam(value = "userName") String userName, @RequestParam(value = "email") String email,

@@ -1,5 +1,5 @@
 package apalabrados.model;
 
-public enum Type {
+public enum SquareType {
 	NORMAL, TP, TL, DP, DL;
 }

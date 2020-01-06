@@ -1,97 +1,91 @@
 package apalabrados.model;
 
-import java.util.ArrayList;
-
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class Cadena {
-	private ArrayList<Square> squares;
-	private int points;
+//Casilla del tablero
+public class Square {
+	private char letter;
+	private int row;
+	private int col;
+	private SquareType type;
+	private boolean provisional;
 	
-	public Cadena() {
-		this.squares=new ArrayList<>();
+	Square(int row, int col) {
+		this.letter='\0';
+		this.row = row;
+		this.col = col;
+		this.type=SquareType.NORMAL;
+		this.provisional = true;
+	}
+	
+	Square(int row, int col, char letter) {
+		this.letter=letter;
+		this.row = row;
+		this.col = col;
+	}
+	
+	Square() {
+		this.row = -1;
+		this.col = -1;
+		this.letter='\0';
+		this.type=SquareType.NORMAL;
+		this.provisional = true;
+	}
+	
+
+	public int getRow() {
+		return row;
 	}
 
-	public void add(Square square) {
-		this.squares.add(square);
+	public void setRow(int row) {
+		this.row = row;
 	}
 
-	@Override
-	public String toString() {
-		StringBuilder sb=new StringBuilder("(");
-		for (Square square : squares)
-			sb.append(square.getLetter());
-		sb.append(", " + this.points + ") ");
-		return sb.toString();
+	public int getCol() {
+		return col;
 	}
 
-	public int length() {
-		return squares.size();
+	public void setCol(int col) {
+		this.col = col;
 	}
 
-	public void calculatePoints() {
-		int dp=0, tp=0;
-		for (Square square : this.squares) {
-			if (this.squares.size()>1) {
-				char letra = square.getLetter();
-				switch (square.getType()) {
-					case NORMAL :
-						this.points+=Board.puntos.get(letra);
-						break;
-					case DL : 
-						if (square.isProvisional())
-							this.points+=2*Board.puntos.get(letra);
-						else
-							this.points+=Board.puntos.get(letra);
-						break;
-					case TL : 
-						if (square.isProvisional())
-							this.points+=3*Board.puntos.get(letra);
-						else
-							this.points+=Board.puntos.get(letra);
-						break;
-					case DP:
-						this.points+=Board.puntos.get(letra);
-						if (square.isProvisional())
-							dp++;
-						break;
-					case TP:
-						this.points+=Board.puntos.get(letra);
-						if (square.isProvisional())
-							tp++;
-						break;
-					default:
-						break;
-				}
-			}
-		}
-		for (int i=0; i<dp; i++)
-			this.points*=2;
-		for (int i=0; i<tp; i++)
-			this.points*=3;
+	public void setType(SquareType type) {
+		this.type=type;
+	}
+	
+	public SquareType getType() {
+		return type;
+	}
+	
+	public char getLetter() {
+		return letter;
 	}
 
-	public String getText() {
-		StringBuilder sb=new StringBuilder();
-		for (Square square : squares)
-			sb.append(square.getLetter());
-		return sb.toString();
+	public void setLetter(char letter) {
+		this.letter = letter;
+		this.provisional = true;
 	}
-
-	public int getPoints() {
-		return this.points;
-	}
-
+	
 	public void setProvisional(boolean provisional) {
-		for (Square square : squares)
-			square.setProvisional(provisional);
+		this.provisional = provisional;
+	}
+	
+	public boolean isProvisional() {
+		return provisional;
 	}
 
+	public boolean isEmpty() {
+		return this.letter=='\0';
+	}
+	
 	public JSONObject toJSON() throws JSONException {
 		JSONObject jso = new JSONObject();
-		jso.put("sequence", this.getText());
-		jso.put("points", this.getPoints());
+		jso.put("col", this.col);
+		jso.put("row", this.row);
+		jso.put("letter", Character.toString(letter));
+		
 		return jso;
 	}
 }

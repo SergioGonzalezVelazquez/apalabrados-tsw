@@ -21,6 +21,7 @@ function GameViewModel(user) {
     console.log("tablero:")
     console.log(self.tablero().casillas())
 
+
     //Controller for Popups
     this.shouldShowPopup = ko.observable(false);
 
@@ -64,6 +65,7 @@ function GameViewModel(user) {
     this.closeModals = function () {
         self.showDialogLoser(false);
         self.showDialogWinner(false);
+        self.showDialogConfirmarJugada(false);
         self.showDialogCambioLetras(false);
         self.showDialogProfileImage(false);
     }
@@ -85,10 +87,19 @@ function GameViewModel(user) {
     this.notificationMessage = ko.observable();
     this.showNotification = ko.observable(false);
     this.displayNotification = function (clazz, message) {
+        //Restart a CSS Animation
+        //https://css-tricks.com/restart-css-animation/
+
+        var el = document.getElementById('notification');
+        el.style.animation = 'none';
+        el.offsetHeight; /* trigger reflow */
+        el.style.animation = null;
+
         self.notificationClass(clazz);
         self.notificationMessage(message);
         self.showNotification(true)
     }
+
     this.closeNotification = function () {
         self.showNotification(false);
     }
@@ -225,7 +236,7 @@ function GameViewModel(user) {
             if (newTimer < 0) {
                 self.timer(120);
                 self.stopCountdown();
-                self.abandonar();
+                //self.abandonar();
                 return 0;
             } else {
                 self.timer(newTimer);
@@ -270,7 +281,6 @@ function GameViewModel(user) {
                     if (data.casilla() !== null) {
 
                         //La quitamos de casillas jugadas
-                        console.log(self.tablero().casillasJugadas());
                         self.tablero().casillasJugadas.remove(function (casillaJugada) {
                             return ((casillaJugada.row == data.casilla().row) && (casillaJugada.column == data.casilla().column));
                         });
@@ -457,7 +467,7 @@ function GameViewModel(user) {
             success: gameOK,
             error: gameError
         };
-        this.isLoading(true);
+        self.isLoading(true);
         $.ajax(data);
     }
 
@@ -473,7 +483,9 @@ function GameViewModel(user) {
     }
 
     function gameError(response) {
-        console.log(response.responseText)
+        window.alert("Se ha desvinculado su cuenta. Por favor, inicie sesión de nuevo");
+        sessionStorage.clear();
+        window.location = "http://localhost:8080/index.html";
     }
 
 
@@ -517,15 +529,19 @@ function GameViewModel(user) {
                 self.ws.send(JSON.stringify(mensaje));
             }
         }
+
+
         self.ws.onerror = function (event) {
             self.displayNotification("notification-error", `on error`);
         }
+
         self.ws.onclose = function (event) {
             self.displayNotification("notification-warning", `Websocket cerrado`);
             endMatch();
         }
-        self.ws.onmessage = function (event) {
 
+
+        self.ws.onmessage = function (event) {
             var jso = event.data;
             jso = JSON.parse(jso);
             console.log("Mensaje recibido del tipo: " + jso.type);
@@ -533,7 +549,10 @@ function GameViewModel(user) {
 
             if (jso.type == "TEXTO") {
                 console.log(jso.mensaje);
-            } else if (jso.type == "START") {
+            }
+
+            //Inicio de partida 
+            else if (jso.type == "START") {
                 console.log("start")
                 self.shouldShowBoard(true);
                 self.isLoading(false);
@@ -550,21 +569,102 @@ function GameViewModel(user) {
                     self.tablero().panel.push(new Ficha(ko, letters[i], false, false));
                 }
 
+                //Define available pieces
+                self.tablero().availablePieces(jso.availablePieces);
+
                 //Iniciar temporizador
                 if (jso.turn) {
                     self.launchCountdown();
                 }
+            }
+
+            //Respuesta del servidor al movimiento de un jugador
+            else if (jso.type == "RESULT") {
+                if (jso.exceptions && jso.exceptions.length > 0) {
+                    if (jso.exceptions.length == 1) {
+                        self.displayNotification("notification-warning", jso.exceptions[0]);
+                    } else {
+                        var problems = "";
+                        jso.exceptions.forEach(function (problem) {
+                            problems += problem + ". ";
+                        });
+                        self.displayNotification("notification-warning", "Esta jugada tiene algunos problemas: " + problems);
+                    }
+
+                } else if (jso.invalid && jso.invalid.length > 0) {
+                    var jsoInvalids = jso.invalid;
+                    var strInvalids = '';
+                    jsoInvalids.forEach(function (invalid) {
+                        strInvalids += invalid.sequence + ", ";
+                    });
+                    strInvalids = strInvalids.slice(0, -2);
+
+                    self.displayNotification("notification-warning", `Algunas de las palabras no están aceptadas: ${strInvalids}`);
+                } else {
+                    console.log("todas validas")
+                    //Preparar dialógo confirmar jugada
+                    var score = 0;
+                    self.resultadoJugada(new ResultadoJugada(ko));
+
+                    var jsoValids = jso.valid;
+                    jsoValids.forEach(function (valid) {
+                        self.resultadoJugada().palabras.push(`Jugarás '${valid.sequence}' por ${valid.points} puntos`);
+                        score += valid.points;
+                    });
+                    self.resultadoJugada().puntosTotal(score);
 
 
-            } else if (jso.type == "MOVEMENT") {
-                if (jso.exceptions > 0) {
+                    //Mostrar diálogo
+                    self.showDialogConfirmarJugada(true);
+                }
 
+            }
+
+            //El jugador ha hecho un movimiento y ha sido confirmado
+            else if (jso.type == "MOVEMENT") {
+                console.log("movimiento: ")
+                console.log(JSON.stringify(jso))
+                if (jso.exceptions && jso.exceptions.length > 0) {
+                    if (jso.exceptions.length == 1) {
+                        self.displayNotification("notification-warning", jso.exceptions[0]);
+                    } else {
+                        var problems = "";
+                        jso.exceptions.forEach(function (problem) {
+                            problems += problem + ". ";
+                        });
+                        self.displayNotification("notification-warning", "Esta jugada tiene algunos problemas: " + problems);
+                    }
                 } else {
                     self.player1().turn(false);
                     self.player2().turn(true);
                     self.player1().score(jso.score);
-                    self.tablero().fichasRestantes(jso.availablePieces);
-                    if (jso.movements.length > 0) {
+                    self.tablero().availablePieces(jso.availablePieces);
+                    if (jso.valid && jso.valid.length > 0) {
+                        var timestamp = new Date();
+                        var jugadas = jso.valid;
+                        jugadas.forEach(function (jugada) {
+                            self.movementHistory.unshift("[" + addZero(timestamp.getHours()) + ":" + addZero(timestamp.getMinutes()) + ":" +
+                                addZero(timestamp.getSeconds()) + "]\t" + self.player1().name() + ` jugó ${jugada.sequence} por ${jugada.points} puntos`);
+                        });
+
+                        casillasPermanentes(jso.valid);
+
+                        //Vaciar casillas jugadas y quitar del panel
+                        for (var i = 0; i < self.tablero().casillasJugadas().length; i++) {
+                            self.tablero().panel.remove(self.tablero().casillasJugadas()[i].ficha());
+                            console.log(self.tablero().casillasJugadas()[i].letter());
+                            console.log("panel con " + self.tablero().panel().length + " letras")
+                        }
+                        self.tablero().casillasJugadas.removeAll();
+
+                        //Binding letters new letters
+                        var letters = jso.letters.split(' ');
+                        for (var i = 0; i < letters.length; i++) {
+                            //self.tablero().panel.push(letters[i]);
+                            console.log("nueva letra: " + letters[i])
+                            self.tablero().panel.push(new Ficha(ko, letters[i], false, false));
+                        }
+                        console.log(self.tablero().panel())
 
                     } else {
                         var timestamp = new Date();
@@ -580,19 +680,28 @@ function GameViewModel(user) {
 
             //El jugador rival ha hecho un movimiento
             else if (jso.type == "OPPONENT_MOVEMENT") {
-                if (jso.exceptions > 0) {
+                console.log("movimiento del rival: ")
+                console.log(JSON.stringify(jso))
+                if (jso.exceptions && jso.exceptions.length > 0) {
 
                 } else {
                     self.player1().turn(true);
                     self.player2().turn(false);
                     self.player2().score(jso.score);
-                    self.tablero().fichasRestantes(jso.availablePieces);
-                    if (jso.movements.length > 0) {
-
+                    self.tablero().availablePieces(jso.availablePieces);
+                    if (jso.valid && jso.valid.length > 0) {
+                        var timestamp = new Date();
+                        var jugadas = jso.valid;
+                        jugadas.forEach(function (jugada) {
+                            self.movementHistory.unshift("[" + addZero(timestamp.getHours()) + ":" + addZero(timestamp.getMinutes()) + ":" +
+                                addZero(timestamp.getSeconds()) + "]\t" + self.player2().name() + ` jugó ${jugada.sequence} por ${jugada.points} puntos`);
+                        });
+                        casillasPermanentes(jso.valid);
                     } else {
                         var timestamp = new Date();
                         self.movementHistory.unshift("[" + addZero(timestamp.getHours()) + ":" + addZero(timestamp.getMinutes()) + ":" +
                             addZero(timestamp.getSeconds()) + "]\t" + self.player2().name() + " pasó su turno sin movimientos");
+
                     }
                 }
 
@@ -600,10 +709,10 @@ function GameViewModel(user) {
                 self.launchCountdown();
 
                 //Cambio de letras
-            } else if (jso.type == "NEW_LETTERS") {
-                console.log("new letters recibidas");
-                console.log(jso)
+            }
 
+            //El jugador recibe nuevas letras después de solicitarlo
+            else if (jso.type == "NEW_LETTERS") {
                 var newLetters = jso.letters;
 
                 if (newLetters && newLetters.length > 0) {
@@ -634,6 +743,35 @@ function GameViewModel(user) {
         }
     }
 
+    /***********************************
+     * CONFIRMAR UNA JUGADA
+     ***********************************/
+    this.showDialogConfirmarJugada = ko.observable(false);
+    this.resultadoJugada = ko.observable();
+
+    this.cancelarJugada = function () {
+        self.showDialogConfirmarJugada(false);
+    }
+
+    this.confirmarJugada = function () {
+        var mensaje = {
+            type: "CONFIRMAR_JUGADA",
+            idPartida: sessionStorage.getItem('idPartida'),
+        };
+        self.ws.send(JSON.stringify(mensaje));
+        self.showDialogConfirmarJugada(false);
+    }
+
+    function casillasPermanentes(jugadas) {
+        jugadas.forEach(function (jugada) {
+            var squares = jugada.square;
+            squares.forEach(function (square) {
+                self.tablero().casillas()[square.row][square.col].fixed(true);
+                self.tablero().casillas()[square.row][square.col].letter(square.letter);
+            });
+        });
+
+    };
 
 
     /***********************************
@@ -707,7 +845,7 @@ function GameViewModel(user) {
                     console.log("letra: " + element.ficha().letter());
                     var casilla = {
                         row: element.row,
-                        column: element.column,
+                        col: element.column,
                         letter: element.ficha().letter(),
                     }
                     mensaje['jugada'].push(casilla);
@@ -937,7 +1075,7 @@ class Tablero {
         this.panel = ko.observableArray([]);
 
         //Fichas disponibles en el servidor
-        this.fichasRestantes = ko.observable(0);
+        this.availablePieces = ko.observable(95);
     }
 }
 
@@ -948,7 +1086,7 @@ class Casilla {
     constructor(ko, tablero, row, column) {
         this.tablero = tablero;
         this.label = ko.observable('');
-        this.letter = '';
+        this.letter = ko.observable('');
         //Indica si la casilla está definida por una
         //letra confirmada por el servidor
         this.fixed = ko.observable(false);
@@ -970,6 +1108,15 @@ class Ficha {
     }
 }
 
+/**
+ * Clase ResultadoJugada
+ */
+class ResultadoJugada {
+    constructor(ko) {
+        this.puntosTotal = ko.observable(0);
+        this.palabras = ko.observableArray();
+    }
+}
 
 
 //initializeNavbar();

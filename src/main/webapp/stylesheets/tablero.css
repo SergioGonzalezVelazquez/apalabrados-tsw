@@ -378,7 +378,7 @@
   display: inline-block;
 }
 
-.cambioLetras input[type="checkbox"][id^="checkbox"] {
+.cambioLetras input[type="checkbox"] {
   display: none;
 }
 
@@ -455,7 +455,7 @@
 
 .log-list {
   padding: 0;
-  max-height: 5em;
+  max-height: 15em;
   /* 1.25 x 4 */
   overflow-y: auto;
 }

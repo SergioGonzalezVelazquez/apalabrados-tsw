@@ -47,8 +47,8 @@ public class Match {
 	public void start() {
 		this.pendingSquares = new ArrayList();
 		this.scores = new HashMap<String, Integer>();
-		this.scores.put(this.playerA.getSession().getId(), 90);
-		this.scores.put(this.playerB.getSession().getId(), 78);
+		this.scores.put(this.playerA.getSession().getId(), 0);
+		this.scores.put(this.playerB.getSession().getId(), 0);
 		this.board = new Board();
 		this.gameTurn = new Random().nextBoolean() ? this.playerA : this.playerB;
 
@@ -156,16 +156,18 @@ public class Match {
 			player.sendMessage(result);
 
 		} else {
-			this.scores.put(player.getSession().getId(), this.pendingMovement.getPoints());
+			this.scores.put(player.getSession().getId(), (this.pendingMovement.getPoints() + this.scores.get(player.getSession().getId())));
 			// Primero mandamos un mensaje al jugador que ha confirmado su jugada
 			this.pendingMovement.setType("MOVEMENT");
-			this.pendingMovement.setLetters(this.board.getLetters(this.pendingSquares.size()));
+			this.pendingMovement.setLetters(this.board.getLetters(this.pendingSquares.size()));	        
 			this.pendingMovement.setScore(this.scores.get(player.getSession().getId()));
+			this.pendingMovement.setAvailablePieces(this.board.availableLetters());
 			player.sendMessage(this.pendingMovement);
 
 			// Después, notificamos al jugador que estaba esperando
 			this.pendingMovement.setType("OPPONENT_MOVEMENT");
 			this.pendingMovement.setLetters("");
+			this.pendingMovement.setAvailablePieces(this.board.availableLetters());
 			this.pendingMovement.setScore(this.scores.get(player.getSession().getId()));
 			opponent.sendMessage(this.pendingMovement);
 

@@ -193,15 +193,12 @@ function GameViewModel(user) {
 
     this.cambiarLetrasConfirm = function () {
         self.showDialogCambioLetras(false);
-        console.log("letras a cambiar:")
-        console.log(self.lettersToChange())
-        var lettersIndex = self.lettersToChange.sorted();
-
-        //Cambiar valor númerico (posición en el panel), por letra
-        var letters = lettersIndex.map(function (index) {
-            return self.tablero().panel()[parseInt(index)].letter();
+        var letters = [];
+        self.lettersToChange().forEach(function(ficha){
+            letters.push(ficha.letter());
         });
 
+        console.log("letras a cambiar:");
         console.log(letters)
 
         var mensaje = {
@@ -566,7 +563,7 @@ function GameViewModel(user) {
                 var letters = jso.letters.split(' ');
                 for (var i = 0; i < letters.length; i++) {
                     //self.tablero().panel.push(letters[i]);
-                    self.tablero().panel.push(new Ficha(ko, letters[i], false, false));
+                    self.tablero().panel.push(new Ficha(ko, letters[i], false));
                 }
 
                 //Define available pieces
@@ -662,8 +659,9 @@ function GameViewModel(user) {
                         for (var i = 0; i < letters.length; i++) {
                             //self.tablero().panel.push(letters[i]);
                             console.log("nueva letra: " + letters[i])
-                            self.tablero().panel.push(new Ficha(ko, letters[i], false, false));
+                            self.tablero().panel.push(new Ficha(ko, letters[i], false));
                         }
+                        console.log("Panel después de actualizar index:")
                         console.log(self.tablero().panel())
 
                     } else {
@@ -718,8 +716,7 @@ function GameViewModel(user) {
                 if (newLetters && newLetters.length > 0) {
                     newLetters = newLetters.split(" ");
                     for (var i = 0; i < newLetters.length; i++) {
-                        var indexToReplace = self.lettersToChange()[i];
-                        self.tablero().panel()[indexToReplace].letter(newLetters[i]);
+                        self.lettersToChange()[i].letter(newLetters[i]);
                     }
                     self.displayNotification("notification-success", `Recibidas ${newLetters.length} nuevas letras: ` + jso.letters);
                 } else {
@@ -1101,7 +1098,9 @@ class Casilla {
  * Clase Ficha
  */
 class Ficha {
-    constructor(ko, letra, inTablero, fixed) {
+    constructor(ko,letra, inTablero) {
+        //Index es necesario para hacer el binding con el elemento HTML en cambio de letras 
+        //this.index = ko.observable(index);
         this.inTablero = ko.observable(inTablero);
         this.letter = ko.observable(letra);
         this.casilla = ko.observable(null);

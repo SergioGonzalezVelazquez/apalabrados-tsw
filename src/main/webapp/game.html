@@ -245,7 +245,7 @@
               <div class="col-6 border border-ligh"> <strong>Puntuación</strong>
                 total
                 <br>
-                <span class="txt-puntos">0</span>
+                <span class="txt-puntos" data-bind="text: score"></span>
               </div>
               <div class="col-6 border border-ligh" data-bind="using: $root.tablero, as: 'tablero'">
                 <strong>Fichas</strong> restantes
@@ -271,7 +271,7 @@
               <div class="w-100"></div>
               <div class="col-12 border border-ligh"> <strong>Puntuación</strong>
                 acumulada <br>
-                <span class="txt-puntos">0</span>
+                <span class="txt-puntos" data-bind="text: score"></span>
               </div>
             </div>
           </div>
@@ -363,8 +363,8 @@
             <!-- ko foreach :panel -->
             <li>
               <input type="checkbox"
-                data-bind="attr: {id: 'checkbox' + $index(), value: $index()}, checked: $root.lettersToChange" />
-              <label data-bind="attr: {for: 'checkbox' + $index()}">
+                data-bind="attr: {id: 'ficha_' + $index()}, checkedValue: $data, checked: $root.lettersToChange" />
+              <label data-bind="attr: {for: 'ficha_' + $index()}">
                 <img data-bind="attr: { src: '/assets/images/' + $data.letter() + '.svg'}" alt="$data.letter()" />
               </label>
             </li>

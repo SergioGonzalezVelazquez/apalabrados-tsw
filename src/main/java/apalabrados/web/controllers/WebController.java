@@ -51,7 +51,6 @@ public class WebController {
 	@Autowired
 	public void loadPalabrasRepo() {
 		Manager.get().setPalabrasRepo(palabraRepo);
-		System.out.println("palabrasRepo cargado");
 	}
 
 	@RequestMapping("/signup")
@@ -59,7 +58,6 @@ public class WebController {
 			@RequestParam(value = "pwd1") String pwd1,
 			@RequestParam(value = "pwd2") String pwd2) throws Exception {
 		
-		System.out.println("username: " + userName + ", email: " + email);
 		if (pwd1 == null || pwd2 == null)
 			throw new Exception("Passwords could not be empty");
 		if (!pwd1.equals(pwd2))
@@ -73,11 +71,9 @@ public class WebController {
 		
 		//Encrypt password with SHA-1
 		String pwdEncrypt = DigestUtils.sha1Hex(pwd1);
-		System.out.println("Registro encript: " + pwdEncrypt);
 		user.setPwd(pwdEncrypt);
 
 		userRepo.save(user);
-		System.out.println("register Ok: user " + user.getUserName() + " with email " + user.getEmail() );
 
 		return user;
 	}
@@ -88,7 +84,6 @@ public class WebController {
 		User user;
 		user = userRepo.findByEmail(email);
 		String pwdEncrypt = DigestUtils.sha1Hex(pwd);
-		System.out.println("Login encript: " + pwdEncrypt);
 		if (user != null && user.getPwd().equals(pwdEncrypt)) {
 			session.setAttribute("user", user);
 			return user;
@@ -99,13 +94,11 @@ public class WebController {
 
 	@RequestMapping("/logout")
 	public void salir(HttpSession session) throws Exception {
-		System.out.println("Logout");
 		session.invalidate();
 	}
 
 	@PostMapping("/createMatch")
 	public String createMatch(HttpSession session) throws Exception {
-		System.out.println("create match");
 		if (session.getAttribute("user") == null)
 			throw new Exception("Identifícate antes de jugar");
 
@@ -122,7 +115,6 @@ public class WebController {
 
 	@PostMapping("/joinMatch")
 	public String joinMatch(HttpSession session) throws Exception {
-		System.out.println("join match");
 		if (session.getAttribute("user") == null)
 			throw new Exception("Identifícate antes de jugar");
 
@@ -130,6 +122,10 @@ public class WebController {
 
 		if (this.pendingMatches.isEmpty())
 			throw new Exception("No hay partidas pendientes. Crea una.");
+		
+		//Comprobar si este user-agent ya tiene una partida en juego
+		
+		
 		Match match = this.pendingMatches.remove(0);
 		match.setPlayerB(user);
 		this.inPlayMatches.put(match.getId(), match);
@@ -141,20 +137,16 @@ public class WebController {
 	
 	@PostMapping("requestToken")
 	public void solicitarToken(@RequestParam String email) throws MessagingException {
-		System.out.println("Request Token solicitud recibida");
 		User user;
 		user = userRepo.findByEmail(email);
 		if(user!= null) {
 			Token token = new Token(email);
 			tokenRepo.save(token);
 			
-
 			this.emailSender.enviarPorGmail(email, token.getToken());
-			System.out.println("correo enviado");
+
 		}
-		else {
-			System.out.println("NO CORREO: " + email);
-		}
+
 
 	}
 	
@@ -181,8 +173,6 @@ public class WebController {
 	 */
 	@PostMapping("validateToken")
 	public ResponseEntity<String> validateToken(@RequestParam String code) throws Exception {
-		System.out.println(code);
-		
 		Optional<Token> optToken = tokenRepo.findById(code);
 		if(optToken.isPresent()) {
 			Token token = optToken.get();
@@ -213,7 +203,6 @@ public class WebController {
 		
 		//Después cogemos la parte base64
 		String bytes = base64Image.split(",")[1];
-		System.out.println(bytes);
 		
 		if(!Base64.isBase64(bytes)) {
 			throw new Exception("Entrada de archivo no válida");
@@ -222,7 +211,6 @@ public class WebController {
 		byte[] encoded = Base64.encodeBase64(base64Image.getBytes());
 		user.setPhoto(encoded);
 		userRepo.save(user);
-		System.out.println("guardado");
 		
 		return ResponseEntity.ok().build();	
 	}

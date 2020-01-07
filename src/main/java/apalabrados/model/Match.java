@@ -22,6 +22,7 @@ public class Match {
 	private Map<String, Integer> scores;
 	private User gameTurn;
 	private Board board;
+	private Timer timer;
 
 	// Listado de casillas que están pendientes de ser confirmadas.
 	// Esto es, cuando el servidor valida una jugada pero espera confirmación.
@@ -45,6 +46,7 @@ public class Match {
 	}
 
 	public void start() {
+		this.timer = new Timer(120, this);
 		this.pendingSquares = new ArrayList();
 		this.scores = new HashMap<String, Integer>();
 		this.scores.put(this.playerA.getSession().getId(), 0);
@@ -84,6 +86,8 @@ public class Match {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+
+		this.timer.start();
 	}
 
 	public void playerPlays(String idSession, JSONArray jsaMovement) throws Exception {
@@ -125,15 +129,12 @@ public class Match {
 							jsoCasilla.getString("letter").charAt(0));
 					this.pendingSquares.add(square);
 				}
-
-				System.out.println("casillas pendientes: " + this.pendingSquares.size());
 			}
-
-			// opponent.sendMessage(result);
 		}
 	}
 
 	public void acceptMovement(String idSession) throws Exception {
+		this.timer.stop();
 		User player;
 		User opponent;
 		MovementResult result;
@@ -156,10 +157,11 @@ public class Match {
 			player.sendMessage(result);
 
 		} else {
-			this.scores.put(player.getSession().getId(), (this.pendingMovement.getPoints() + this.scores.get(player.getSession().getId())));
+			this.scores.put(player.getSession().getId(),
+					(this.pendingMovement.getPoints() + this.scores.get(player.getSession().getId())));
 			// Primero mandamos un mensaje al jugador que ha confirmado su jugada
 			this.pendingMovement.setType("MOVEMENT");
-			this.pendingMovement.setLetters(this.board.getLetters(this.pendingSquares.size()));	        
+			this.pendingMovement.setLetters(this.board.getLetters(this.pendingSquares.size()));
 			this.pendingMovement.setScore(this.scores.get(player.getSession().getId()));
 			this.pendingMovement.setAvailablePieces(this.board.availableLetters());
 			player.sendMessage(this.pendingMovement);
@@ -177,9 +179,12 @@ public class Match {
 			this.pendingSquares.clear();
 		}
 
+		this.timer.start();
+
 	}
 
 	public void toggleTurn(String idSession) throws Exception {
+		this.timer.stop();
 		MovementResult movement;
 		User player;
 		User opponent;
@@ -208,10 +213,11 @@ public class Match {
 			movement.setType("OPPONENT_MOVEMENT");
 			opponent.sendMessage(movement);
 		}
-
+		this.timer.start();
 	}
 
 	public void giveUp(String idSession) {
+		this.timer.stop();
 		User player; // Loser
 		User opponent; // Winner
 
@@ -244,7 +250,8 @@ public class Match {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+		
+		this.endMatch();
 	}
 
 	public void changeLetters(String idSession, Character[] letters) {
@@ -268,5 +275,48 @@ public class Match {
 
 		}
 	}
+
+	public void expiredTime() {
+		User player;
+		User opponent;
+		MovementResult result;
+
+		if (this.playerA == this.gameTurn) {
+			player = playerA;
+			opponent = playerB;
+		} else {
+			player = playerB;
+			opponent = playerA;
+		}
+		
+		// Primero mandamos un mensaje al jugador que tenía el turno
+		try {
+			JSONObject jsLoser = new JSONObject();
+			jsLoser.put("winner", false);
+			jsLoser.put("type", "MATCH_END");
+			player.sendMessage(jsLoser.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		// Después, mandamos el mensaje al jugador que ha ganado
+		try {
+			JSONObject jsWinner = new JSONObject();
+			jsWinner.put("winner", true);
+			jsWinner.put("type", "MATCH_END");
+			opponent.sendMessage(jsWinner.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		this.endMatch();
+	}
+	
+	private void endMatch() {
+		this.timer.kill();
+	}
+	
 
 }

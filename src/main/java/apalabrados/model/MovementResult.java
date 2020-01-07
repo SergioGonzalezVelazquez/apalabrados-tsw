@@ -1,6 +1,7 @@
 package apalabrados.model;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -141,6 +142,8 @@ public class MovementResult {
 		jso.put("letters", newLetters);
 		jso.put("availablePieces", availablePieces);
 		jso.put("type", type);
+		jso.put("timestamp", new Date().getTime());
+		
 		return jso;
 	}
 

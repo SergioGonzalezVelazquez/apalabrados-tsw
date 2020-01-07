@@ -50,12 +50,15 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
+        <!--
         <li class="nav-item">
+          
           <a class="nav-link" href="#" data-bind="click : createGame">Crear partida</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#" data-bind="click : joinGame">Unir a partida</a>
         </li>
+        -->
       </ul>
 
       <ul class="navbar-nav ml-auto nav-flex-icons">
@@ -72,56 +75,40 @@
           </a>
           <div class="dropdown-menu dropdown-menu-lg-right dropdown-secondary"
             aria-labelledby="navbarDropdownMenuLink-55">
-            <a class="dropdown-item" href="#">Perfil</a>
-            <a class="dropdown-item" data-bind="click: selectProfileImage">Cambiar foto de perfil</a>
+            <!-- ko if:  $root.shouldShowBoard -->
+            <a class="dropdown-item" href="#" data-bind="click: $root.abandonar"><i
+                class="material-icons dropdown-icon">
+                thumb_down
+              </i>Abandonar partida</a>
+            <!-- /ko -->
+            <a class="dropdown-item" data-bind="click: selectProfileImage"><i class="material-icons dropdown-icon">
+                add_a_photo
+              </i>Cambiar foto de perfil</a>
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#" data-bind="click : logout">Salir</a>
+            <a class="dropdown-item" href="#" data-bind="click : logout"><i class="material-icons dropdown-icon">
+                exit_to_app
+              </i>Cerrar sesión</a>
           </div>
         </li>
       </ul>
     </div>
   </nav>
 
-  <div class="container-fluid" data-bind="visible: isLoading">
-    <div class="row  isLoading row d-flex justify-content-cente mx-0">
-      <div data-bind="loading-animation: isLoading"></div>
-    </div>
-  </div>
-
   <!-- MENÚ PRINCIPAL (SIN TABLERO) -->
-  <div class="container-fluid" data-bind="hidden: shouldShowBoard">
-    <div class="row my-5 main-menu" id="mainMenu">
-      <div class="col-lg-3 col-sm-12 p-0">
-        <h4>Nueva Partida</h4>
-
+  <div class="container-fluid home-page-container" data-bind="hidden: shouldShowBoard">
+    <!-- Logo Apalabrados -->
+    <img id="imgLogo" class="img-responsive" src="assets/images/logo.png" alt="Apalabrados" width="72" height="72">
+    <h1 id="txtLogo" class="tittleApalabrados">Apalabrados</h1>
+    <span data-bind="text: '¡Bienvenido ' + $root.player1().name() + '!'"></span>
+    <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
+      data-bind="hidden: isLoadingGame, click : createGame"><strong>Crear partida</strong></button>
+    <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
+      data-bind="hidden: isLoadingGame, click : joinGame"><strong>Unir a partida</strong></button>
+    <div data-bind="visible: isLoadingGame">
+      <div class="row  isLoading row d-flex justify-content-center mx-0">
+        <div data-bind="loading-animation: isLoadingGame"></div>
       </div>
-      <div class="col-lg-3 col-sm-12 p-0">
-        <h4>En Juego</h4>
-      </div>
-
-
-      <div class="col-lg-3 col-sm-12 p-0">
-        <h4>Recientes</h4>
-        <div class="row match-info mx-auto my-3">
-          <div class="col-3 border-right border-ligh">
-            <img src="/assets/images/M.svg">
-          </div>
-          <div class="col-9">
-            <div class="row-sm-12">
-              <span>Ganado</span>
-              <span>Ganado</span>
-            </div>
-            <span>jugador1: 80p</span><br>
-            <span>tú: 100p</span>
-          </div>
-        </div>
-      </div>
-
-
-      <div class="col-lg-3 col-sm-12 p-0">
-        <h4>Resumen</h4>
-      </div>
-
+      <span class="isLoadingMsg" data-bind="text: $root.isLoadingMsg"></span>
     </div>
   </div>
 
@@ -299,14 +286,14 @@
   <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogLoser">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content info-modal">
-        <div class="modal-body ">
-          <span class="title">Partida terminada</span><br>
+        <div class="modal-body info-modal-body">
+          <h3 class="title">Partida terminada</h3><br>
           <img src="assets/images/icons/sad.png" alt="perdedor"><br>
           <span class="loser">¡Ooooooops!</span><br>
           <span>¡Has Perdido!</span><br>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary btn-xs" data-bind="click : submitEnd">Close</button>
+          <button type="button" class="btn btn-danger btn-xs" data-bind="click : submitEnd">Cerrar</button>
         </div>
       </div>
     </div>
@@ -316,14 +303,14 @@
   <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogWinner">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content info-modal">
-        <div class="modal-body ">
-          <span class="title">Partida terminada</span><br>
+        <div class="modal-body info-modal-body">
+          <h3 class="title">Partida terminada</h3><br>
           <img src="assets/images/icons/feliz.png" alt="perdedor"><br>
           <span class="winner">¡Felicidades!</span><br>
           <span>Has ganado la partida</span><br>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary btn-xs" data-bind="click : submitEnd">Aceptar</button>
+          <button type="button" class="btn btn-success btn-xs" data-bind="click : submitEnd">Aceptar</button>
         </div>
       </div>
     </div>

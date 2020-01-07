@@ -4,7 +4,8 @@ function GameViewModel(user) {
 
     //General: controlling hide & show tablero and isLoading animation
     this.shouldShowBoard = ko.observable(false);
-    this.isLoading = ko.observable(false);
+    this.isLoadingGame = ko.observable(false);
+    this.isLoadingMsg = ko.observable();
 
     /***********************************
      * Data bindings
@@ -72,11 +73,13 @@ function GameViewModel(user) {
 
     this.displayDialogWinner = function () {
         self.closeModals();
+        self.stopCountdown();
         self.showDialogWinner(true);
     }
 
     this.displayDialogLoser = function () {
         self.closeModals();
+        self.stopCountdown();
         self.showDialogLoser(true);
     }
 
@@ -464,7 +467,8 @@ function GameViewModel(user) {
             success: gameOK,
             error: gameError
         };
-        self.isLoading(true);
+        self.isLoadingGame(true);
+        self.isLoadingMsg("Creando partida y esperando oponente")
         $.ajax(data);
     }
 
@@ -476,13 +480,18 @@ function GameViewModel(user) {
             success: gameOK,
             error: gameError
         };
+        self.isLoadingGame(true);
+        self.isLoadingMsg("Buscando partidas disponibles")
         $.ajax(data);
     }
 
     function gameError(response) {
-        window.alert("Se ha desvinculado su cuenta. Por favor, inicie sesión de nuevo");
-        sessionStorage.clear();
-        window.location = "http://localhost:8080/index.html";
+        self.isLoadingGame(false);
+        var mensaje = "Error desconocido"
+        if(response.responseJSON && response.responseJSON.message){
+            mensaje = response.responseJSON.message
+        }
+        self.displayNotification("notification-error", mensaje);
     }
 
 
@@ -552,7 +561,7 @@ function GameViewModel(user) {
             else if (jso.type == "START") {
                 console.log("start")
                 self.shouldShowBoard(true);
-                self.isLoading(false);
+                self.isLoadingGame(false);
                 self.player1().turn(jso.turn)
                 self.player2().turn(!jso.turn);
                 self.player2().name(jso.opponent);

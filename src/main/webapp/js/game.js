@@ -66,6 +66,7 @@ function GameViewModel(user) {
     this.closeModals = function () {
         self.showDialogLoser(false);
         self.showDialogWinner(false);
+        self.showMatchesDialog(false);
         self.showDialogConfirmarJugada(false);
         self.showDialogCambioLetras(false);
         self.showDialogProfileImage(false);
@@ -105,6 +106,33 @@ function GameViewModel(user) {
 
     this.closeNotification = function () {
         self.showNotification(false);
+    }
+
+    /***********************************
+     * Solicitar historial de partidas
+     ***********************************/
+    this.showMatchesDialog = ko.observable(false);
+    this.closeMatchesDialog = function () {
+        self.showMatchesDialog(false);
+    }
+    this.getMatches = function () {
+        
+        var data = {
+            url: "/matches",
+            type: "get",
+            success: getMatchesOK,
+            error: getMatchesError
+        };
+        $.ajax(data);
+        self.showMatchesDialog(true);
+    }
+
+    function getMatchesOK (response) {
+        console.log(response)
+    }
+
+    function getMatchesError(response) {
+        console.log("Error getting match")
     }
 
     /***********************************
@@ -197,7 +225,7 @@ function GameViewModel(user) {
     this.cambiarLetrasConfirm = function () {
         self.showDialogCambioLetras(false);
         var letters = [];
-        self.lettersToChange().forEach(function(ficha){
+        self.lettersToChange().forEach(function (ficha) {
             letters.push(ficha.letter());
         });
 
@@ -488,7 +516,7 @@ function GameViewModel(user) {
     function gameError(response) {
         self.isLoadingGame(false);
         var mensaje = "Error desconocido"
-        if(response.responseJSON && response.responseJSON.message){
+        if (response.responseJSON && response.responseJSON.message) {
             mensaje = response.responseJSON.message
         }
         self.displayNotification("notification-error", mensaje);
@@ -1102,7 +1130,7 @@ class Casilla {
  * Clase Ficha
  */
 class Ficha {
-    constructor(ko,letra, inTablero) {
+    constructor(ko, letra, inTablero) {
         //Index es necesario para hacer el binding con el elemento HTML en cambio de letras 
         //this.index = ko.observable(index);
         this.inTablero = ko.observable(inTablero);

@@ -31,7 +31,6 @@ import javax.persistence.Transient;
 @Entity
 @Table(name="matches")
 public class Match {
-
 	@Id
 	private String id;
 	
@@ -95,7 +94,26 @@ public class Match {
 	public void setStatus(MatchStatus status) {
 		this.status = status;
 	}
+	
+	public User getPlayerA() {
+		return playerA;
+	}
 
+	public boolean isPlayerAWins() {
+		return playerAWins;
+	}
+
+	public User getPlayerB() {
+		return playerB;
+	}
+
+	public boolean isPlayerBWins() {
+		return playerBWins;
+	}
+
+	public long getCreated() {
+		return created;
+	}
 
 	public String getId() {
 		return id;

@@ -14,11 +14,13 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,6 +36,7 @@ import apalabrados.utils.EMailSenderService;
 import apalabrados.model.Token;
 import apalabrados.web.exceptions.LoginException;
 import apalabrados.web.exceptions.InvalidTokenException;
+import apalabrados.model.Cadena;
 import apalabrados.model.Match;
 
 @RestController
@@ -124,6 +127,45 @@ public class WebController {
 		
 		return jso.toString();
 	}
+	
+	@GetMapping("/matches")
+	public String getMatches(HttpSession session) throws Exception {
+		System.out.println("getMatches");
+		JSONObject jsoResponse = new JSONObject();
+		JSONObject jsoMatch;
+		JSONArray jsa = new JSONArray();
+		if (session.getAttribute("user") == null)
+			throw new Exception("Identifícate antes de jugar");
+
+		User user = (User) session.getAttribute("user");
+		List<Match> matches = matchRepo.findByPlayerA(user);
+		
+		//Partidas creadas por el usuario (es el player A)
+		for (Match match : matches) {
+			jsoMatch = new JSONObject();
+			jsoMatch.put("status", match.getStatus());
+			jsoMatch.put("winner", match.isPlayerAWins());
+			jsoMatch.put("opponent", match.getPlayerB().getUserName());
+			jsoMatch.put("created", match.getCreated());
+			jsa.put(jsoMatch);
+		}
+
+		matches = matchRepo.findByPlayerB(user);
+		
+		//Partidas a las que se ha unido (es el player B)
+		for (Match match : matches) {
+			jsoMatch = new JSONObject();
+			jsoMatch.put("status", match.getStatus());
+			jsoMatch.put("winner", match.isPlayerBWins());
+			jsoMatch.put("opponent", match.getPlayerA().getUserName());
+			jsoMatch.put("created", match.getCreated());
+			jsa.put(jsoMatch);
+		}
+		
+		jsoResponse.put("matches", jsa);
+		return jsoResponse.toString();
+	}
+
 
 	@PostMapping("/joinMatch")
 	public String joinMatch(HttpSession session) throws Exception {

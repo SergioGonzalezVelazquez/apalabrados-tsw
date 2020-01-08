@@ -50,11 +50,11 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
-        <!--
+        
         <li class="nav-item">
-          
-          <a class="nav-link" href="#" data-bind="click : createGame">Crear partida</a>
+          <a class="nav-link" href="#" data-bind="click : getMatches">Mis partidas</a>
         </li>
+        <!--
         <li class="nav-item">
           <a class="nav-link" href="#" data-bind="click : joinGame">Unir a partida</a>
         </li>
@@ -375,6 +375,21 @@
     </div>
   </div>
 
+
+  <!-- Dialog: Mis partidas -->
+  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showMatchesDialog">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-body" style="text-align: center;">
+          <h5 class="title">Historial de partidas</h5><br>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary btn-xs" data-bind="click : $root.closeMatchesDialog">Cerrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dialog: Cambio imagen perfil -->
   <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogProfileImage">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">

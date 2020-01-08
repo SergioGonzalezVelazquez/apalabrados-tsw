@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
+import apalabrados.dao.MatchRepository;
 import apalabrados.dao.PalabraRepository;
 import apalabrados.dao.TokenRepository;
 import apalabrados.dao.UserRepository;
@@ -43,6 +44,8 @@ public class WebController {
 	private UserRepository userRepo;
 	@Autowired
 	private PalabraRepository palabraRepo;
+	@Autowired
+	private MatchRepository matchRepo;
 	
 	private List<Match> pendingMatches = new ArrayList<>();
 	private EMailSenderService emailSender = new EMailSenderService();
@@ -52,6 +55,12 @@ public class WebController {
 	public void loadPalabrasRepo() {
 		Manager.get().setPalabrasRepo(palabraRepo);
 	}
+	
+	@Autowired
+	public void loadMatchRepo() {
+		Manager.get().setMatchRepo(matchRepo);
+	}
+	
 
 	@RequestMapping("/signup")
 	public User signup(@RequestParam(value = "userName") String userName, @RequestParam(value = "email") String email,
@@ -110,6 +119,9 @@ public class WebController {
 		JSONObject jso = new JSONObject();
 		jso.put("type", "PARTIDA CREADA");
 		jso.put("idPartida", match.getId());
+		
+		matchRepo.save(match);
+		
 		return jso.toString();
 	}
 
@@ -132,6 +144,9 @@ public class WebController {
 		JSONObject jso = new JSONObject();
 		jso.put("type", "PARTIDA LISTA");
 		jso.put("idPartida", match.getId());
+		
+		matchRepo.save(match);
+		
 		return jso.toString();
 	}
 	
@@ -144,10 +159,7 @@ public class WebController {
 			tokenRepo.save(token);
 			
 			this.emailSender.enviarPorGmail(email, token.getToken());
-
 		}
-
-
 	}
 	
 	@PostMapping("updatePwd")

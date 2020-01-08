@@ -13,24 +13,71 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import apalabrados.dao.MatchRepository;
+import apalabrados.dao.PalabraRepository;
+import apalabrados.web.controllers.Manager;
+
 import java.util.UUID;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
+import javax.persistence.Table;
+import javax.persistence.Transient;
+
+@Entity
+@Table(name="matches")
 public class Match {
+
+	@Id
 	private String id;
+	
+	@Column
+	private MatchStatus status;
+	
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(unique = false, name = "PLAYER_A")
 	private User playerA;
+    @Column(name = "PLAYER_A_WINS")
+	private boolean playerAWins;
+    
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(unique = false, name = "PLAYER_B")
 	private User playerB;
+    @Column(name = "PLAYER_B_WINS")
+	private boolean playerBWins;
+    
+    @Column(name = "created_at")
+	private long created;
+    
+	@Transient
 	private Map<String, Integer> scores;
+	@Transient
 	private User gameTurn;
+	@Transient
 	private Board board;
+	@Transient
 	private Timer timer;
+	@Transient
+	private MatchRepository matchRepo;
 
 	// Listado de casillas que están pendientes de ser confirmadas.
 	// Esto es, cuando el servidor valida una jugada pero espera confirmación.
+	@Transient
 	private ArrayList<Square> pendingSquares;
+	@Transient
 	private MovementResult pendingMovement;
 
 	public Match() {
 		this.id = UUID.randomUUID().toString();
+		this.matchRepo = Manager.get().getMatchRepo();
+		this.status = MatchStatus.WAITING;
+		this.playerAWins = false;
+		this.playerBWins = false;
+		this.created = System.currentTimeMillis();
 	}
 
 	public void setPlayerA(User user) {
@@ -40,12 +87,22 @@ public class Match {
 	public void setPlayerB(User playerB) {
 		this.playerB = playerB;
 	}
+	
+	public MatchStatus getStatus() {
+		return status;
+	}
+
+	public void setStatus(MatchStatus status) {
+		this.status = status;
+	}
+
 
 	public String getId() {
 		return id;
 	}
 
 	public void start() {
+		this.status = MatchStatus.IN_PLAY;
 		this.timer = new Timer(120, this);
 		this.pendingSquares = new ArrayList();
 		this.scores = new HashMap<String, Integer>();
@@ -88,6 +145,8 @@ public class Match {
 		}
 
 		this.timer.start();
+		
+		this.matchRepo.save(this);
 	}
 
 	public void playerPlays(String idSession, JSONArray jsaMovement) throws Exception {
@@ -223,9 +282,11 @@ public class Match {
 
 		if (this.playerA.getSession().getId().equals(idSession)) {
 			player = playerA;
+			playerBWins = true;
 			opponent = playerB;
 		} else {
 			player = playerB;
+			playerAWins = true;
 			opponent = playerA;
 		}
 
@@ -284,9 +345,11 @@ public class Match {
 		if (this.playerA == this.gameTurn) {
 			player = playerA;
 			opponent = playerB;
+			playerBWins = true;
 		} else {
 			player = playerB;
 			opponent = playerA;
+			playerAWins = true;
 		}
 		
 		// Primero mandamos un mensaje al jugador que tenía el turno
@@ -316,6 +379,9 @@ public class Match {
 	
 	private void endMatch() {
 		this.timer.kill();
+		Manager.get().endMatch(this.id);
+		this.status = MatchStatus.FINISHED;
+		this.matchRepo.save(this);
 	}
 	
 

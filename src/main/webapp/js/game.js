@@ -510,8 +510,7 @@ function GameViewModel(user) {
         self.shouldShowBoard(false);
         sessionStorage.removeItem("idPartida");
         self.stopCountdown();
-        self.player2 = ko.observable();
-
+        self.player2 = ko.observable(new Player(ko));
     }
 
 
@@ -553,12 +552,8 @@ function GameViewModel(user) {
             console.log("Mensaje recibido del tipo: " + jso.type);
             console.log(JSON.stringify(jso))
 
-            if (jso.type == "TEXTO") {
-                console.log(jso.mensaje);
-            }
-
             //Inicio de partida 
-            else if (jso.type == "START") {
+            if (jso.type == "START") {
                 console.log("start")
                 self.shouldShowBoard(true);
                 self.isLoadingGame(false);

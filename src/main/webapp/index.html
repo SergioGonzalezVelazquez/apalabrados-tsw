@@ -26,7 +26,7 @@
 
     <!-- Knockout -->
     <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
-    
+
     <!-- Google API -->
     <meta name="google-signin-client_id"
         content="283528331959-6hurgg9as7kjcpa15b3itieeer0gap5f.apps.googleusercontent.com">
@@ -53,23 +53,27 @@
                 <a href="#" class="btn-circle btn-google"></a>
             </div>
              Social login buttons -->
-			<div class=container>
-				 <div class=col-offset-5 ><div class="g-signin2" data-onsuccess="onSignIn"></div> </div>
-			</div>
+            <div class=container>
+                <div class=col-offset-5>
+                    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+                </div>
+            </div>
 
             <!-- Email input -->
             <div class="form-group">
                 <label for="inputEmail" class="sr-only">Correo electrónico</label>
-                <input type="email" data-bind="value : userEmail" class="form-control rounded-pill"
+                <input type="email" id="inputEmail" data-bind="value : userEmail" class="form-control rounded-pill"
                     placeholder="Correo electrónico" required autofocus>
             </div>
+
 
             <!-- Password input -->
             <div class="form-group">
                 <label for="inputPassword" class="sr-only">Contraseña</label>
-                <input type="password" data-bind="value : userPwd" class="form-control rounded-pill"
+                <input type="password" id="inputPwd" data-bind="value : userPwd" class="form-control rounded-pill"
                     placeholder="Contraseña" required>
             </div>
+
 
             <!-- Forgot pwd link and remember me-->
             <div class="forgot-link form-group d-flex justify-content-between align-items-center">
@@ -80,15 +84,15 @@
                 <a href="#" data-bind="click : changeViewToRestorePwd">¿Has olvidado tu contraseña?</a>
             </div>
 
+
             <!-- Sign-in button-->
-            <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
+            <button type="submit" id="btnEntrar" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
                 data-bind="click: signInEmail"><strong>Entrar</strong></button>
 
-            <p class="mt-3 font-weight-normal">¿Aún no tienes cuenta? <a href="#"
-                    data-bind="click: changeViewToSignUp"><strong>Regístrate</strong></a></p>
+            <p class="mt-3 font-weight-normal">¿Aún no tienes cuenta? <a href="#" data-bind="click: changeViewToSignUp"
+                    id="refRegistrarse"><strong>Regístrate</strong></a></p>
 
-            <label id="message" data-bind="html : message"> PRUEBA</label>
-
+            <label id="message" data-bind="html : message"></label>
         </div>
 
 
@@ -105,8 +109,8 @@
             <!-- Email input -->
             <div class="form-group">
                 <label for="inputEmail" class="sr-only">Correo electrónico</label>
-                <input type="email" data-bind="value : userEmail" id="inputEmail" class="form-control rounded-pill"
-                    placeholder="Correo electrónico" required autofocus>
+                <input type="email" data-bind="value : userEmail" id="inputEmailRegister"
+                    class="form-control rounded-pill" placeholder="Correo electrónico" required autofocus>
             </div>
 
             <!-- Password input -->
@@ -124,13 +128,13 @@
             </div>
 
             <!-- Sign-up button-->
-            <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
+            <button type="submit" id="btnRegistrarse" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
                 data-bind="click: signUp"><strong>Registrarse</strong></button>
 
             <p class="mt-3 font-weight-normal">¿Ya tienes cuenta? <a href="#"
                     data-bind="click: changeViewToSignIn"><strong>Inicia sesión</strong></a></p>
 
-            <label id="message" data-bind="html : message"> PRUEBA</label>
+            <label id="message_singup" data-bind="html : message"></label>
 
         </div>
 
@@ -142,8 +146,10 @@
                 <input type="email" data-bind="value : userEmail" class="form-control rounded-pill"
                     placeholder="Correo electrónico" required autofocus>
             </div>
-            <!-- Sign-up button-->
-            <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block" data-bind="click: updatePwd"><strong>Recuperar
+            
+            <!-- Restore pwd-->
+            <button type="submit" id="btnRestorePwd" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
+                data-bind="click: updatePwd"><strong>Recuperar
                     contraseña</strong></button>
 
             <!-- Forgot pwd link and remember me-->
@@ -153,7 +159,7 @@
             </div>
 
 
-            <label id="message" data-bind="html : message"> PRUEBA</label>
+            <label id="message_pwd" data-bind="html : message"></label>
         </div>
 
 

@@ -33,11 +33,11 @@
   <!-- this is the code that will allow icon to be visible in the title bar of the brower -->
   <link rel="icon" type="image/ico" href="assets/images/logo.png" />
   <title>Apalabrados</title>
-   <!-- Google API -->
-    <meta name="google-signin-client_id"
-        content="283528331959-6hurgg9as7kjcpa15b3itieeer0gap5f.apps.googleusercontent.com">
-    <script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!-- Google API -->
+  <meta name="google-signin-client_id"
+    content="283528331959-6hurgg9as7kjcpa15b3itieeer0gap5f.apps.googleusercontent.com">
+  <script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 </head>
 
@@ -55,7 +55,7 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
-        
+
         <li class="nav-item">
           <a class="nav-link" href="#" data-bind="click : getMatches">Mis partidas</a>
         </li>
@@ -81,16 +81,18 @@
           <div class="dropdown-menu dropdown-menu-lg-right dropdown-secondary"
             aria-labelledby="navbarDropdownMenuLink-55">
             <!-- ko if:  $root.shouldShowBoard -->
-            <a class="dropdown-item" href="#" data-bind="click: $root.abandonar"><i
+            <a class="dropdown-item" href="#" id="dropdown_Abandonar" data-bind="click: $root.abandonar"><i
                 class="material-icons dropdown-icon">
                 thumb_down
               </i>Abandonar partida</a>
             <!-- /ko -->
-            <a class="dropdown-item" data-bind="click: selectProfileImage"><i class="material-icons dropdown-icon">
+            <a class="dropdown-item" id="dropdown_CambiarFoto" data-bind="click: selectProfileImage"><i
+                class="material-icons dropdown-icon">
                 add_a_photo
               </i>Cambiar foto de perfil</a>
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="#" data-bind="click : logout"><i class="material-icons dropdown-icon">
+            <a class="dropdown-item" id="dropdown_CerrarSesion" href="#" data-bind="click : logout"><i
+                class="material-icons dropdown-icon">
                 exit_to_app
               </i>Cerrar sesión</a>
           </div>
@@ -105,9 +107,9 @@
     <img id="imgLogo" class="img-responsive" src="assets/images/logo.png" alt="Apalabrados" width="72" height="72">
     <h1 id="txtLogo" class="tittleApalabrados">Apalabrados</h1>
     <span data-bind="text: '¡Bienvenido ' + $root.player1().name() + '!'"></span>
-    <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
+    <button type="submit" id="btnCrearPartida" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
       data-bind="hidden: isLoadingGame, click : createGame"><strong>Crear partida</strong></button>
-    <button type="submit" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
+    <button type="submit" id="btnUnirPartida" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
       data-bind="hidden: isLoadingGame, click : joinGame"><strong>Unir a partida</strong></button>
     <div data-bind="visible: isLoadingGame">
       <div class="row  isLoading row d-flex justify-content-center mx-0">
@@ -159,55 +161,40 @@
         </div>
         <!-- /ko -->
 
-        <!-- Letras del juego--
-        <div class="row mx-0 pb-1 letters-wrapper">
-          <ul class="letters list-group">
-            <li><img data-bind="attr: { src: l1Img}" alt="l1Txt"></li>
-            <li><img data-bind="attr: { src: l2Img}" alt="l2Txt"></li>
-            <li><img data-bind="attr: { src: l3Img}" alt="l3Txt"></li>
-            <li><img data-bind="attr: { src: l4Img}" alt="l4Txt"></li>
-            <li><img data-bind="attr: { src: l5Img}" alt="l5Txt"></li>
-            <li><img data-bind="attr: { src: l6Img}" alt="l6Txt"></li>
-            <li><img data-bind="attr: { src: l7Img}" alt="l7Txt"></li>
-          </ul>
-        </div>
-      -->
-
-
         <!-- Panel con botones de opciones-->
         <div class="row mx-0 bg-dark mb-5 pl-0">
           <div class="btn-group btn-group-sm" role="group" aria-label="GameButtons" data-bind="using: player1">
-            <button type="button" class="btn btn-dark" data-bind="enable: turn, click: $root.jugar"> <i
+            <button type="button" id="btnJugar" class="btn btn-dark" data-bind="enable: turn, click: $root.jugar"> <i
                 class="material-icons">
                 play_arrow
               </i><br><span>Jugar</span></button>
 
-            <button type="button" id="shuffle" class="btn btn-dark" data-bind="click: $root.mezclar"> <i
+            <button type="button" id="btnMezclar" class="btn btn-dark" data-bind="click: $root.mezclar"> <i
                 class="material-icons">
                 shuffle
               </i><br><span>Mezclar</span></button>
 
-            <button type="button" class="btn btn-dark" data-bind="enable: turn, click: $root.cambiar"> <i
-                class="material-icons">
+            <button type="button" id="btnCambiar" class="btn btn-dark" data-bind="enable: turn, click: $root.cambiar">
+              <i class="material-icons">
                 repeat
               </i><br><span>Cambiar</span></button>
 
-            <button type="button" id="restore" class="btn btn-dark" data-bind="click: $root.llamar"> <i
+            <button type="button" id="btnLlamar" class="btn btn-dark" data-bind="click: $root.llamar"> <i
                 class="material-icons">
                 settings_backup_restore
               </i><br><span>Llamar</span></button>
 
-            <button type="button" class="btn btn-dark" data-bind="enable: turn, click: $root.pasar"> <i
+            <button type="button" id="btnPasar" class="btn btn-dark" data-bind="enable: turn, click: $root.pasar"> <i
                 class="material-icons">
                 fast_forward
               </i><br><span>Pasar</span></button>
 
-            <button type="button" class="btn btn-dark" data-bind="click: $root.abandonar"> <i class="material-icons">
+            <button type="button" id="btnRendirse" class="btn btn-dark" data-bind="click: $root.abandonar"> <i
+                class="material-icons">
                 outlined_flag
               </i><br><span>Rendirse</span></button>
           </div>
         </div>
-
 
 
         <!-- Información sobre los jugadores-->
@@ -389,12 +376,15 @@
           <h5 class="title">Historial de partidas</h5><br>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-primary btn-xs" data-bind="click : $root.closeMatchesDialog">Cerrar</button>
+          <button type="button" class="btn btn-primary btn-xs"
+            data-bind="click : $root.closeMatchesDialog">Cerrar</button>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- Dialog: Cambio imagen perfil -->
+
+  <!-- Dialog: Cambio imagen perfil -->
   <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogProfileImage">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content">
@@ -498,7 +488,8 @@
 
   <!-- TouchPunch -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jqueryui-touch-punch/0.2.3/jquery.ui.touch-punch.min.js">
+  </script>
   <!--<script src="./script.js"></script> -->
 </body>
 

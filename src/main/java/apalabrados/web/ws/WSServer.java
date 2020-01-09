@@ -29,7 +29,6 @@ public class WSServer extends TextWebSocketHandler {
 	@Override
 	protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
 
-		System.out.println(message.getPayload());
 		JSONObject jso = new JSONObject(message.getPayload());
 		String type = jso.getString("type");
 		String idPartida = jso.getString("idPartida");
@@ -41,7 +40,6 @@ public class WSServer extends TextWebSocketHandler {
 			break;
 
 		case "MOVIMIENTO": // el jugador ha puesto letras
-			System.out.println("Movimiento");
 			match.playerPlays(session.getId(), jso.getJSONArray("jugada"));
 			break;
 			
@@ -58,11 +56,9 @@ public class WSServer extends TextWebSocketHandler {
 			match.changeLetters(session.getId(), letters);
 			break;
 		case "PASO_TURNO": // el jugador cambiar el turno
-			System.out.println("Paso turno");
 			match.toggleTurn(session.getId());
 			break;
 		case "ABANDONO": // el jugador ha puesto letras
-			System.out.println("Abandono");
 			match.giveUp(session.getId());
 			break;
 

@@ -17,6 +17,8 @@ public class MovementResult {
 	private String type;
 	private int availablePieces;
 	private String newLetters;
+
+	
 	
 	public MovementResult(int score, int pieces) {
 		this.exceptions = new ArrayList<>();

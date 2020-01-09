@@ -45,8 +45,6 @@ public class Manager {
 	}
 	
 	public void endMatch(String idPartida) {
-		System.out.println("Antes de terminar: " + WebController.inPlayMatches.size());
 		WebController.inPlayMatches.remove(idPartida);
-		System.out.println("Partida borrada: " + WebController.inPlayMatches.size());
 	}
 }

@@ -24,6 +24,8 @@ public class Board implements LetterDistribution {
 	boolean centroOcupado = false;
 	private UserRepository userRepo;
 	private PalabraRepository palabrasRepo;
+	private List<Cadena> cadenasPendientes = new ArrayList<>();
+	private List<JSONObject> jugadaPendiente;
 
 	public Board() {
 		this.palabrasRepo = Manager.get().getPalabrasRepo();
@@ -32,7 +34,7 @@ public class Board implements LetterDistribution {
 		// Crear las 255 casillas del tablero
 		for (int i = 0; i < 15; i++)
 			for (int j = 0; j < 15; j++)
-				squares[i][j] = new Square(i,j);
+				squares[i][j] = new Square(i, j);
 		int x, y;
 
 		// Definir casillas de "triple valor de palabra"
@@ -69,10 +71,8 @@ public class Board implements LetterDistribution {
 		}
 	}
 
-	public MovementResult movement(List<JSONObject> jugada) {
-		System.out.println("movement result:");
-		System.out.println("jugada recibida: " + jugada.toString());
-		
+	public MovementResult movement(List<JSONObject> jugada) throws JSONException {
+
 		List<Cadena> cadenas = new ArrayList<>();
 		MovementResult resultado = new MovementResult("RESULT");
 		boolean enVertical;
@@ -89,7 +89,7 @@ public class Board implements LetterDistribution {
 			resultado.addException(e.getMessage());
 			return resultado;
 		}
-		
+
 		for (Cadena cadena : cadenas) {
 			if (cadena.length() == 1) {
 				resultado.addAccepted(cadena);
@@ -101,25 +101,32 @@ public class Board implements LetterDistribution {
 					resultado.addAccepted(cadena);
 			}
 		}
-		if (resultado.acceptsAll())
-			confirmarJugada(cadenas);
+
+		// Guardamos las cadenas formadas y quitamos las letras
+		// del tablero hasta que se confirme la jugada
+		this.cadenasPendientes = cadenas;
+		this.jugadaPendiente = jugada;
+		if (resultado.acceptsAll()) {
+			calcularPuntos(cadenas);
+		}
+
 		return resultado;
 	}
 
 	private List<Cadena> construirCadenas(List<JSONObject> jugada, boolean enVertical) throws JSONException {
 		Cadena cadena;
 		JSONObject casilla;
-		int row=jugada.get(0).getInt("row");
-		int col=jugada.get(0).getInt("col");
+		int row = jugada.get(0).getInt("row");
+		int col = jugada.get(0).getInt("col");
 		ArrayList<Cadena> cadenas = new ArrayList<>();
 		if (enVertical)
 			cadena = construirCadenaVertical(row, col);
 		else
 			cadena = construirCadenaHorizontal(row, col);
 		cadenas.add(cadena);
-		
-		for (int i=0; i<jugada.size(); i++) {
-			casilla=jugada.get(i);
+
+		for (int i = 0; i < jugada.size(); i++) {
+			casilla = jugada.get(i);
 			row = casilla.getInt("row");
 			col = casilla.getInt("col");
 			cadena = enVertical ? construirCadenaHorizontal(row, col) : construirCadenaVertical(row, col);
@@ -130,17 +137,17 @@ public class Board implements LetterDistribution {
 
 	private Cadena construirCadenaVertical(int row, int col) {
 		int start = row;
-		while (start>0 && !this.squares[start][col].isEmpty()) {
+		while (start > 0 && !this.squares[start][col].isEmpty()) {
 			start--;
 		}
-		
+
 		int end = row;
-		while (end<15 && !this.squares[end][col].isEmpty()) {
+		while (end < 15 && !this.squares[end][col].isEmpty()) {
 			end++;
 		}
-		Cadena cadena=new Cadena();
+		Cadena cadena = new Cadena();
 		Square casilla;
-		for (int i=start; i<end; i++) {
+		for (int i = start; i < end; i++) {
 			casilla = this.squares[i][col];
 			if (!casilla.isEmpty())
 				cadena.add(casilla);
@@ -151,16 +158,16 @@ public class Board implements LetterDistribution {
 	private Cadena construirCadenaHorizontal(int row, int col) {
 		Square casilla;
 		int start = col;
-		while (start>0 && !this.squares[row][start].isEmpty()) {
+		while (start > 0 && !this.squares[row][start].isEmpty()) {
 			start--;
 		}
-		
+
 		int end = col;
-		while (end<15 && !this.squares[row][end].isEmpty()) {
+		while (end < 15 && !this.squares[row][end].isEmpty()) {
 			end++;
 		}
-		Cadena cadena=new Cadena();
-		for (int i=start; i<end; i++) {
+		Cadena cadena = new Cadena();
+		for (int i = start; i < end; i++) {
 			casilla = this.squares[row][i];
 			if (!casilla.isEmpty())
 				cadena.add(casilla);
@@ -168,7 +175,6 @@ public class Board implements LetterDistribution {
 		return cadena;
 	}
 
-	
 	private void comprobarAdyacencia(List<JSONObject> jugada) throws Exception {
 		JSONObject casilla;
 		int row, col;
@@ -184,27 +190,42 @@ public class Board implements LetterDistribution {
 
 	private void colocarLetras(List<JSONObject> jugada) throws Exception {
 		int row, col;
-		for (int i=0; i<jugada.size(); i++) {
+		for (int i = 0; i < jugada.size(); i++) {
 			JSONObject casilla = jugada.get(i);
-			row=casilla.getInt("row");
-			col=casilla.getInt("col");
+			row = casilla.getInt("row");
+			col = casilla.getInt("col");
 			if (!this.squares[row][col].isEmpty())
 				throw new Exception("No puedes poner letras en casillas ocupadas");
 			this.squares[row][col].setLetter(casilla.getString("letter").charAt(0));
 		}
 	}
 
-	private void confirmarJugada(List<Cadena> cadenas) {
-		for (int i=0; i<cadenas.size(); i++) {
+	private void calcularPuntos(List<Cadena> cadenas) {
+		for (int i = 0; i < cadenas.size(); i++) {
 			Cadena cadena = cadenas.get(i);
 			cadena.calculatePoints();
 		}
-		for (int i=0; i<cadenas.size(); i++) {
-			Cadena cadena = cadenas.get(i);
+	}
+	
+	//Quita las letras del tablero hasta que el jugador confirme la jugada
+	public void quitarJugadaProvisional() throws JSONException {
+		for (int i = 0; i < this.jugadaPendiente.size(); i++) {
+			squares[this.jugadaPendiente.get(i).getInt("row")][jugadaPendiente.get(i).getInt("col")].setLetter('\0');
+		}
+	}
+
+	public void confirmarJugada() throws JSONException {
+		for (int i = 0; i < jugadaPendiente.size(); i++) {
+			squares[jugadaPendiente.get(i).getInt("row")][jugadaPendiente.get(i).getInt("col")]
+					.setLetter(jugadaPendiente.get(i).getString("letter").charAt(0));
+		}
+		
+		for (int i = 0; i < this.cadenasPendientes.size(); i++) {
+			Cadena cadena = this.cadenasPendientes.get(i);
 			cadena.setProvisional(false);
 		}
 	}
-	
+
 	private boolean existeAdyacente(int row, int col) {
 		int norte = row - 1;
 		int sur = row + 1;
@@ -290,7 +311,7 @@ public class Board implements LetterDistribution {
 		for (int i = 0; i < n; i++)
 			r = r + this.letters.remove(0) + " ";
 		// Remove last space character
-		if(n > 0) {
+		if (n > 0) {
 			r = r.substring(0, r.length() - 1);
 		}
 
@@ -306,10 +327,9 @@ public class Board implements LetterDistribution {
 		// Shuffle letras
 		Collections.shuffle(this.letters);
 	}
-	
+
 	public void addLettersStart(ArrayList<Character> letters) {
 		this.letters.addAll(0, letters);
 	}
-
 
 }

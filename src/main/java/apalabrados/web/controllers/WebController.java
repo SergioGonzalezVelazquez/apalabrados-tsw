@@ -129,7 +129,6 @@ public class WebController {
 
 	@PostMapping("/createMatch")
 	public String createMatch(HttpSession session) throws Exception {
-		System.out.println("crear match de " + session.getId());
 		if (session.getAttribute("user") == null)
 			throw new Exception("Identifícate antes de jugar");
 
@@ -155,7 +154,6 @@ public class WebController {
 	
 	@GetMapping("/matches")
 	public String getMatches(HttpSession session) throws Exception {
-		System.out.println("getMatches");
 		JSONObject jsoResponse = new JSONObject();
 		JSONObject jsoMatch;
 		JSONArray jsa = new JSONArray();
@@ -194,7 +192,6 @@ public class WebController {
 
 	@PostMapping("/joinMatch")
 	public String joinMatch(HttpSession session) throws Exception {
-		System.out.println("join match de " + session.getId());
 		if (session.getAttribute("user") == null)
 			throw new Exception("Identifícate antes de jugar");
 

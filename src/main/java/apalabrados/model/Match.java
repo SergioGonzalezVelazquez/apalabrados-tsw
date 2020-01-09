@@ -62,6 +62,13 @@ public class Match {
 	private Timer timer;
 	@Transient
 	private MatchRepository matchRepo;
+	
+	//Flag utilizado para colocar las letras en un determinado orden y
+	//realizar una serie de movimientos planeados en los tests. También
+	//se utilza para no generar el turno inicial de manera aleatoria y 
+	// asignarselo al player A. 
+	@Transient
+	private boolean testing = false;
 
 	// Listado de casillas que están pendientes de ser confirmadas.
 	// Esto es, cuando el servidor valida una jugada pero espera confirmación.
@@ -81,6 +88,10 @@ public class Match {
 
 	public void setPlayerA(User user) {
 		this.playerA = user;
+	}
+	
+	public void setTesting(boolean testing) {
+		this.testing = testing;
 	}
 
 	public void setPlayerB(User playerB) {
@@ -119,7 +130,7 @@ public class Match {
 		return id;
 	}
 
-	public void start() {
+	public void start() throws JSONException {
 		this.status = MatchStatus.IN_PLAY;
 		this.timer = new Timer(120, this);
 		this.pendingSquares = new ArrayList();
@@ -128,6 +139,17 @@ public class Match {
 		this.scores.put(this.playerB.getSession().getId(), 0);
 		this.board = new Board();
 		this.gameTurn = new Random().nextBoolean() ? this.playerA : this.playerB;
+		
+		if(this.testing) {
+			this.gameTurn = this.playerA;
+			
+			//Generar listado de fichas en un determinado orden.
+			ArrayList<Character> testingLetters = this.testingLetters();
+			
+			//Sacamos del servidor tantas fichas como tiene testing letters
+			this.board.getLetters(testingLetters.size());
+			this.board.addLettersStart(testingLetters);
+		}
 
 		// Message to player A
 		try {
@@ -293,7 +315,7 @@ public class Match {
 		this.timer.start();
 	}
 
-	public void giveUp(String idSession) {
+	public void giveUp(String idSession) throws JSONException {
 		this.timer.stop();
 		User player; // Loser
 		User opponent; // Winner
@@ -355,7 +377,7 @@ public class Match {
 		}
 	}
 
-	public void expiredTime() {
+	public void expiredTime() throws JSONException {
 		User player;
 		User opponent;
 		MovementResult result;
@@ -400,6 +422,46 @@ public class Match {
 		Manager.get().endMatch(this.id);
 		this.status = MatchStatus.FINISHED;
 		this.matchRepo.save(this);
+	}
+	
+	private ArrayList<Character> testingLetters() {
+		ArrayList<Character> letters = new ArrayList();
+		
+		//Turno 1: Jugador A (ESCUDO)
+		letters.add('S');
+		letters.add('C');
+		letters.add('O');
+		letters.add('D');
+		letters.add('E');
+		letters.add('E');
+		letters.add('U');
+		
+		//Turno 2: Jugador B (CERA)
+		letters.add('R');
+		letters.add('E');
+		letters.add('A');
+		letters.add('S');
+		letters.add('L');
+		letters.add('O');
+		letters.add('P');
+		
+		//Turno 3: Jugador A (RETAN)
+		letters.add('N');
+		letters.add('T');
+		letters.add('A');
+		letters.add('R');
+		letters.add('I');
+		letters.add('a');
+		
+		
+		//Turno 4: Jugador B (SALID)
+		letters.add('I');
+		letters.add('Ñ');
+		letters.add('A');
+		letters.add('P');
+		
+	
+		return letters;
 	}
 	
 

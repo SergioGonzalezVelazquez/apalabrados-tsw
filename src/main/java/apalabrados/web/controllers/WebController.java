@@ -54,6 +54,10 @@ public class WebController {
 	private EMailSenderService emailSender = new EMailSenderService();
 	public static ConcurrentHashMap<String, Match> inPlayMatches = new ConcurrentHashMap<>();
 	
+	//Flag utilizado para realizar test y que las letras devueltas no sean aleatorias
+	private boolean TESTING = true;
+	
+	
 	@Autowired
 	public void loadPalabrasRepo() {
 		Manager.get().setPalabrasRepo(palabraRepo);
@@ -131,6 +135,12 @@ public class WebController {
 		User user = (User) session.getAttribute("user");
 
 		Match match = new Match();
+		
+		
+		if (this.TESTING) {
+			match.setTesting(true);
+		}
+		
 		match.setPlayerA(user);
 		this.pendingMatches.add(match);
 		JSONObject jso = new JSONObject();

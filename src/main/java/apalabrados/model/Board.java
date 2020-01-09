@@ -306,5 +306,10 @@ public class Board implements LetterDistribution {
 		// Shuffle letras
 		Collections.shuffle(this.letters);
 	}
+	
+	public void addLettersStart(ArrayList<Character> letters) {
+		this.letters.addAll(0, letters);
+	}
+
 
 }

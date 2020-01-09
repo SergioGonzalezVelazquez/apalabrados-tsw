@@ -1,5 +1,7 @@
 package apalabrados.model;
 
+import org.json.JSONException;
+
 public class Timer implements Runnable {
 
 	private Thread thread;
@@ -45,6 +47,9 @@ public class Timer implements Runnable {
 				}
 				Thread.sleep(1000L); // 1000L = 1000ms = 1 second
 			} catch (InterruptedException e) {
+			} catch (JSONException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}

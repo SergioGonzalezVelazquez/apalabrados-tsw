@@ -37,13 +37,13 @@ public class Match {
 	@Column
 	private MatchStatus status;
 	
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     @JoinColumn(unique = false, name = "PLAYER_A")
 	private User playerA;
     @Column(name = "PLAYER_A_WINS")
 	private boolean playerAWins;
     
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne
     @JoinColumn(unique = false, name = "PLAYER_B")
 	private User playerB;
     @Column(name = "PLAYER_B_WINS")
@@ -441,25 +441,51 @@ public class Match {
 		letters.add('E');
 		letters.add('A');
 		letters.add('S');
-		letters.add('L');
+		letters.add('Ñ');
 		letters.add('O');
 		letters.add('P');
 		
-		//Turno 3: Jugador A (RETAN)
+		//Turno 3: Jugador A recibe depués de ESCUDO (RETAN)
 		letters.add('N');
 		letters.add('T');
 		letters.add('A');
 		letters.add('R');
 		letters.add('I');
-		letters.add('a');
-		
-		
-		//Turno 4: Jugador B (SALID)
-		letters.add('I');
-		letters.add('Ñ');
 		letters.add('A');
-		letters.add('P');
 		
+		
+		//Turno 4: Jugador B recibe después de CERA (SALID)
+		letters.add('A');
+		letters.add('I');
+		letters.add('L');
+		
+		
+		//Turno 5: Jugador A recibe después de RETAN (AIRE)
+		letters.add('L');
+		letters.add('N');
+		letters.add('I');
+		letters.add('O');
+
+		
+		//Turno 6: Jugador B recibe después de SALID (PIÑA)
+		letters.add('I');
+		letters.add('A');
+		letters.add('E');
+		
+		//Turno 7: Jugador A recibe después de AIRE (SONIA)
+		letters.add('A');
+		letters.add('A');
+		letters.add('A');
+		
+		//Turno 8: B pasa su turno
+		
+		//Turno 9: Jugador A recibe después de SAMUEL 
+		letters.add('Z');
+		letters.add('O');
+		letters.add('T');
+		letters.add('X');
+		
+
 	
 		return letters;
 	}

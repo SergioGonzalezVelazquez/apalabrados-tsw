@@ -106,7 +106,7 @@
     <!-- Logo Apalabrados -->
     <img id="imgLogo" class="img-responsive" src="assets/images/logo.png" alt="Apalabrados" width="72" height="72">
     <h1 id="txtLogo" class="tittleApalabrados">Apalabrados</h1>
-    <span data-bind="text: '¡Bienvenido ' + $root.player1().name() + '!'"></span>
+    <span id="txtBienvenido" data-bind="text: '¡Bienvenido ' + $root.player1().name() + '!'"></span>
     <button type="submit" id="btnCrearPartida" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
       data-bind="hidden: isLoadingGame, click : createGame"><strong>Crear partida</strong></button>
     <button type="submit" id="btnUnirPartida" class="btn mt-5 rounded-pill btn-lg btn-success btn-block"
@@ -131,7 +131,7 @@
             <tr>
               <!-- ko foreach : { data: fila, as: 'celda' } -->
               <!-- ko using : celda -->
-              <td data-bind="class : clazz, droppable: $data">
+              <td data-bind="class : clazz, droppable: $data, attr: {id: 'board_' + $data.row + '_' + $data.column }">
                 <label data-bind="html : label, hidden: $data.fixed()"></label>
                 <img
                   data-bind="visible : $data.fixed(), attr: { src: '/assets/images/dark/' + $data.letter() + '_dark.svg'}"
@@ -154,7 +154,7 @@
         <div class="row mx-0 pb-1 letters-wrapper">
           <ul class="letters">
             <!-- ko foreach : panel -->
-            <li data-bind="draggable: $data, sortable: $data"><img
+            <li data-bind="draggable: $data, sortable: $data, attr: {id: 'panel_' + $index()}"><img
                 data-bind="attr: { src: '/assets/images/' + $data.letter() + '.svg'}" alt="$data.letter()"></li>
             <!-- /ko -->
           </ul>
@@ -208,9 +208,9 @@
                   class="d-inline-block align-center" alt="">
               </div>
               <div class="col-4 border border-ligh">
-                <div class="row-sm-12" data-bind="text : name">
+                <div class="row-sm-12" id="txtP1Name" data-bind="text : name">
                 </div>
-                <div class="row-sm-12 player1-turn" data-bind="visible: turn">
+                <div id="txtP1Turn" class="row-sm-12 player1-turn" data-bind="visible: turn">
                   <span>Tu turno</span>
                 </div>
               </div>
@@ -224,12 +224,12 @@
               <div class="col-6 border border-ligh"> <strong>Puntuación</strong>
                 total
                 <br>
-                <span class="txt-puntos" data-bind="text: score"></span>
+                <span id="txtP1Score" class="txt-puntos" data-bind="text: score"></span>
               </div>
               <div class="col-6 border border-ligh" data-bind="using: $root.tablero, as: 'tablero'">
                 <strong>Fichas</strong> restantes
                 <br>
-                <span class="txt-puntos" data-bind="text: tablero.availablePieces()"></span>
+                <span class="txt-puntos" id="txtFichasRestantes" data-bind="text: tablero.availablePieces()"></span>
               </div>
             </div>
           </div>
@@ -243,14 +243,14 @@
               <div class="col-7 border border-ligh">
                 <div class="row-sm-12" data-bind="text : name">
                 </div>
-                <div class="row-sm-12 player2-turn" data-bind="visible: turn">
+                <div id="txtP2Turn" class="row-sm-12 player2-turn" data-bind="visible: turn">
                   <span>Tu turno</span>
                 </div>
               </div>
               <div class="w-100"></div>
               <div class="col-12 border border-ligh"> <strong>Puntuación</strong>
                 acumulada <br>
-                <span class="txt-puntos" data-bind="text: score"></span>
+                <span id="txtP2Score" class="txt-puntos" data-bind="text: score"></span>
               </div>
             </div>
           </div>
@@ -275,7 +275,7 @@
   <!--<button type="button" class="close" data-dismiss="modal">&times;</button>-->
 
   <!-- Dialog: Loser -->
-  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogLoser">
+  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogLoser" id="dialogLoser">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content info-modal">
         <div class="modal-body info-modal-body">
@@ -292,7 +292,7 @@
   </div>
 
   <!-- Dialog: Winner -->
-  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogWinner">
+  <div class="modal fade " tabindex="-1" role="dialog" data-bind="modal:showDialogWinner" id="dialogWinner">
     <div class="modal-dialog modal-dialog-centered" role="document">
       <div class="modal-content info-modal">
         <div class="modal-body info-modal-body">
@@ -323,8 +323,9 @@
           </ul>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-danger btn-xs" data-bind="click : $root.cancelarJugada">Cancelar</button>
-          <button type="button" class="btn btn-success btn-xs"
+          <button id="btnCancelarJugada" type="button" class="btn btn-danger btn-xs"
+            data-bind="click : $root.cancelarJugada">Cancelar</button>
+          <button id="btnConfirmarJugada" type="button" class="btn btn-success btn-xs"
             data-bind="click : $root.confirmarJugada">Confirmar</button>
         </div>
       </div>

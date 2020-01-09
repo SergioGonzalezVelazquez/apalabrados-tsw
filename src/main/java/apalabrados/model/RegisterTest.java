@@ -15,34 +15,28 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.JavascriptExecutor;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 
 public class RegisterTest {
-	private WebDriver driver;
-	private Map<String, Object> vars;
-	JavascriptExecutor js;
-
+	private WebDriver driverP1, driverP2;
+	
 	@Before
 	public void setUp() {
 		//Relative path
 		String path = System.getProperty("user.dir");
 		System.setProperty("webdriver.chrome.driver", path + "/selenium/chromedriver.exe");
-		System.out.println("setUp");
-		driver = new ChromeDriver();
-		js = (JavascriptExecutor) driver;
-		vars = new HashMap<String, Object>();
+		
+		driverP1 = new ChromeDriver();
+		driverP1.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
+		driverP2 =  new ChromeDriver();
+		driverP1.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS);
 	}
-
-	@After
-	public void tearDown() {
-		driver.quit();
-	}
-
-	@Test
-	public void register() throws InterruptedException {
-		System.setProperty("webdriver.chrome.driver","/apalabrados-tsw/selenium/chromedriver.exe");
+	
+	private void register(WebDriver driver, String userName, String mail, String pwd) throws InterruptedException {
 		driver.get("http://localhost:8080/");
-		driver.manage().window().setSize(new Dimension(1576, 836));
+		//driver.manage().window().setSize(new Dimension(1576, 836));
+		
 		driver.findElement(By.id("refRegistrarse")).click();
 		{
 			WebElement element = driver.findElement(By.id("inputUsername"));
@@ -60,24 +54,45 @@ public class RegisterTest {
 			builder.moveToElement(element).release().perform();
 		}
 		driver.findElement(By.id("inputUsername")).click();
-		driver.findElement(By.id("inputUsername")).sendKeys("ana");
+		driver.findElement(By.id("inputUsername")).sendKeys(userName);
 		driver.findElement(By.id("inputEmailRegister")).click();
-		driver.findElement(By.id("inputEmailRegister")).sendKeys("ana@mail.com");
+		driver.findElement(By.id("inputEmailRegister")).sendKeys(mail);
 		driver.findElement(By.id("inputPassword")).click();
-		driver.findElement(By.id("inputPassword")).sendKeys("ana");
+		driver.findElement(By.id("inputPassword")).sendKeys(userName);
 		driver.findElement(By.id("inputPassword2")).click();
-		driver.findElement(By.id("inputPassword2")).sendKeys("ana");
+		driver.findElement(By.id("inputPassword2")).sendKeys(userName);
 		driver.findElement(By.id("btnRegistrarse")).click();
 		Thread.sleep(1000);
 		assertThat(driver.findElement(By.id("message")).getText(),
 				is("Registrado correctamente. ¡Inicia sesión y juega!"));
 		{
 			String value = driver.findElement(By.id("inputEmail")).getAttribute("value");
-			assertThat(value, is("ana@mail.com"));
+			assertThat(value, is(mail));
 		}
 		{
 			String value = driver.findElement(By.id("inputPwd")).getAttribute("value"); 
-			assertThat(value, is("ana"));
+			assertThat(value, is(userName));
 		}
 	}
+
+
+	@Test
+	public void registerPepe() throws InterruptedException {
+		//Sign-Up player 1 (pepe)
+		register(driverP1, "pepe", "pepe@mail.com", "pepe");
+	}
+	
+	@Test
+	public void registerAna() throws InterruptedException {
+		//Sign-Up player 2 (ana)
+		register(driverP2, "ana", "ana@mail.com", "ana");
+	}
+	
+	
+	@After
+	public void tearDown() {
+		driverP1.quit();
+		driverP2.quit();
+	}
+
 }

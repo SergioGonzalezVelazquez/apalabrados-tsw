@@ -474,6 +474,10 @@ function GameViewModel(user) {
     }
 
     function logoutOK(response) {
+        var objUser = JSON.parse(sessionStorage.user);
+    	if(objUser.photo != null){
+    	    logoutOKGoogle();
+    	}
         sessionStorage.clear();
         window.location = "http://localhost:8080/index.html";
         console.log("Logout OK")

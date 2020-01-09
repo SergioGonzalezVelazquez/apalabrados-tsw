@@ -104,6 +104,20 @@ public class WebController {
 			throw new LoginException();
 	}
 
+	@RequestMapping("/loginWithGoogle")
+	public User loginWithGoogle(HttpSession session, @RequestParam(value = "userName") String userName, 
+			@RequestParam(value = "email") String email) throws LoginException {
+		User user= new User();
+		user.setEmail(email);
+		user.setUserName(userName);
+		// Si no está en la bbdd guarda el mail y el nick
+		if (userRepo.findByEmail(email) == null) 
+			userRepo.save(user);
+		
+		session.setAttribute("user", user);
+		return user;
+	}
+
 	@RequestMapping("/logout")
 	public void salir(HttpSession session) throws Exception {
 		session.invalidate();

@@ -116,6 +116,53 @@ function UserViewModel() {
 
 	}
 }
+// Inicialización de la api de google oauth
+window.onload = function() {
+	gapi.load('auth2', function() {
+		  gapi.auth2.init({
+		    client_id: '283528331959-6hurgg9as7kjcpa15b3itieeer0gap5f.apps.googleusercontent.com'
+		  });
+	 });
+}
 
 var user = new UserViewModel();
 ko.applyBindings(user);
+//Metodo para recoger el login correcto con google, y guardar el correo en la bbdd
+function onSignIn(googleUser) {
+
+	var profile = googleUser.getBasicProfile();
+	console.log("login OK");
+	var user = {
+		"email": profile.getEmail(),
+		"userName": profile.getName(),
+		"photo": profile.getImageUrl()
+	}
+	var info = {
+			email: profile.getEmail(),
+			userName: profile.getName(),
+		};
+		var data = {
+			data: info,
+			url: "loginWithGoogle",
+			type: "post",
+			success: singupOKGoogle
+		};
+	$.ajax(data);
+	
+	sessionStorage.setItem("user", JSON.stringify(user));
+	window.location = "http://localhost:8080/game.html";
+}
+function singupOKGoogle(response) {
+	console.log("Autenticado correctamente" +response.responseJSON.message);
+}
+
+function logoutOKGoogle() {
+	 
+		 var auth2 = gapi.auth2.getAuthInstance();
+			auth2.signOut().then(function () {
+		    	console.log('User signed out Google.');
+		    	sessionStorage.clear();
+		        window.location = "http://localhost:8080/index.html";
+		        console.log("Logout OK");
+	    	});
+}

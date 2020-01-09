@@ -26,7 +26,12 @@
 
     <!-- Knockout -->
     <script type="text/javascript" src="http://ajax.aspnetcdn.com/ajax/knockout/knockout-2.2.1.js"></script>
-
+    
+    <!-- Google API -->
+    <meta name="google-signin-client_id"
+        content="283528331959-6hurgg9as7kjcpa15b3itieeer0gap5f.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js?onload=init" async defer></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 </head>
 
@@ -41,12 +46,16 @@
         <!-- Sign-in view -->
         <div id="signIn-view" data-bind="visible: showSignInForm">
 
-            <!-- Social login buttons -->
+            <!-- Social login buttons 
             <div class="social-login form-group d-flex justify-content-around align-items-center">
                 <a href="#" class="btn-circle btn-facebook"></a>
                 <a href="#" class="btn-circle btn-twitter"></a>
                 <a href="#" class="btn-circle btn-google"></a>
             </div>
+             Social login buttons -->
+			<div class=container>
+				 <div class=col-offset-5 ><div class="g-signin2" data-onsuccess="onSignIn"></div> </div>
+			</div>
 
             <!-- Email input -->
             <div class="form-group">

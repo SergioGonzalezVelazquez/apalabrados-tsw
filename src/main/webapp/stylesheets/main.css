@@ -3,10 +3,10 @@
   --color-background: #deeafc;
 }
 .abcRioButton{
-	  margin: auto;
+	margin: auto;
     bottom: 0.4em;
     border-radius: 19px;
-    }
+ }
 @font-face {
   font-family: 'billabongregular';
   src: url('fonts/billabongregular/billabong-webfont.woff2') format('woff2'),

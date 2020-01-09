@@ -2,7 +2,11 @@
   /* blue */
   --color-background: #deeafc;
 }
-
+.abcRioButton{
+	margin: auto;
+    bottom: 0.4em;
+    border-radius: 19px!important;
+ }
 @font-face {
   font-family: 'billabongregular';
   src: url('fonts/billabongregular/billabong-webfont.woff2') format('woff2'),

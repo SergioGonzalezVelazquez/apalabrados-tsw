@@ -475,7 +475,7 @@ function GameViewModel(user) {
 
     function logoutOK(response) {
         var objUser = JSON.parse(sessionStorage.user);
-    	if(objUser.photo != null){
+    	if(objUser.photo.includes('google', 0) ){
     	    logoutOKGoogle();
     	}
         sessionStorage.clear();

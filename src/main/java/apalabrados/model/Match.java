@@ -2,24 +2,19 @@ package apalabrados.model;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Map.Entry;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import apalabrados.dao.MatchRepository;
-import apalabrados.dao.PalabraRepository;
 import apalabrados.web.controllers.Manager;
 
 import java.util.UUID;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -29,29 +24,29 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 
 @Entity
-@Table(name="matches")
+@Table(name = "matches")
 public class Match {
 	@Id
 	private String id;
-	
+
 	@Column
 	private MatchStatus status;
-	
-    @OneToOne
-    @JoinColumn(unique = false, name = "PLAYER_A")
+
+	@OneToOne
+	@JoinColumn(unique = false, name = "PLAYER_A")
 	private User playerA;
-    @Column(name = "PLAYER_A_WINS")
+	@Column(name = "PLAYER_A_WINS")
 	private boolean playerAWins;
-    
-    @OneToOne
-    @JoinColumn(unique = false, name = "PLAYER_B")
+
+	@OneToOne
+	@JoinColumn(unique = false, name = "PLAYER_B")
 	private User playerB;
-    @Column(name = "PLAYER_B_WINS")
+	@Column(name = "PLAYER_B_WINS")
 	private boolean playerBWins;
-    
-    @Column(name = "created_at")
+
+	@Column(name = "created_at")
 	private long created;
-    
+
 	@Transient
 	private Map<String, Integer> scores;
 	@Transient
@@ -62,11 +57,11 @@ public class Match {
 	private Timer timer;
 	@Transient
 	private MatchRepository matchRepo;
-	
-	//Flag utilizado para colocar las letras en un determinado orden y
-	//realizar una serie de movimientos planeados en los tests. También
-	//se utilza para no generar el turno inicial de manera aleatoria y 
-	// asignarselo al player A. 
+
+	// Flag utilizado para colocar las letras en un determinado orden y
+	// realizar una serie de movimientos planeados en los tests. También
+	// se utilza para no generar el turno inicial de manera aleatoria y
+	// asignarselo al player A.
 	@Transient
 	private boolean testing = false;
 
@@ -76,6 +71,8 @@ public class Match {
 	private int pendingLetters;
 	@Transient
 	private MovementResult pendingMovement;
+
+	private HashMap<String, Integer> letters;
 
 	public Match() {
 		this.id = UUID.randomUUID().toString();
@@ -89,7 +86,7 @@ public class Match {
 	public void setPlayerA(User user) {
 		this.playerA = user;
 	}
-	
+
 	public void setTesting(boolean testing) {
 		this.testing = testing;
 	}
@@ -97,7 +94,7 @@ public class Match {
 	public void setPlayerB(User playerB) {
 		this.playerB = playerB;
 	}
-	
+
 	public MatchStatus getStatus() {
 		return status;
 	}
@@ -105,7 +102,7 @@ public class Match {
 	public void setStatus(MatchStatus status) {
 		this.status = status;
 	}
-	
+
 	public User getPlayerA() {
 		return playerA;
 	}
@@ -137,18 +134,16 @@ public class Match {
 		this.scores = new HashMap<String, Integer>();
 		this.scores.put(this.playerA.getSession().getId(), 0);
 		this.scores.put(this.playerB.getSession().getId(), 0);
-		this.board = new Board();
-		this.gameTurn = new Random().nextBoolean() ? this.playerA : this.playerB;
+		this.letters = new HashMap<String, Integer>();
+		this.letters.put(this.playerA.getSession().getId(), 7);
+		this.letters.put(this.playerB.getSession().getId(), 7);
 		
-		if(this.testing) {
+		if (this.testing) {
+			this.board = new Board(true);
 			this.gameTurn = this.playerA;
-			
-			//Generar listado de fichas en un determinado orden.
-			ArrayList<Character> testingLetters = this.testingLetters();
-			
-			//Sacamos del servidor tantas fichas como tiene testing letters
-			this.board.getLetters(testingLetters.size());
-			this.board.addLettersStart(testingLetters);
+		} else {
+			this.board = new Board();
+			this.gameTurn = new Random().nextBoolean() ? this.playerA : this.playerB;
 		}
 
 		// Message to player A
@@ -220,7 +215,7 @@ public class Match {
 				this.pendingLetters = jsaMovement.length();
 			}
 		}
-		//Quita las letras del tablero hasta que se confirme la jugada
+		// Quita las letras del tablero hasta que se confirme la jugada
 		this.board.quitarJugadaProvisional();
 	}
 
@@ -253,7 +248,9 @@ public class Match {
 					(this.pendingMovement.getPoints() + this.scores.get(player.getSession().getId())));
 			// Primero mandamos un mensaje al jugador que ha confirmado su jugada
 			this.pendingMovement.setType("MOVEMENT");
-			this.pendingMovement.setLetters(this.board.getLetters(this.pendingLetters));
+			
+	
+			this.pendingMovement.setLetters(this.getLetters(player, this.pendingLetters));
 			this.pendingMovement.setScore(this.scores.get(player.getSession().getId()));
 			this.pendingMovement.setAvailablePieces(this.board.availableLetters());
 			player.sendMessage(this.pendingMovement);
@@ -270,9 +267,65 @@ public class Match {
 			this.pendingMovement = null;
 			this.pendingLetters = 0;
 		}
-
-		this.timer.start();
-
+		
+		if(this.board.availableLetters() == 0 && this.letters.get(player.getSession().getId()) == 0) {
+			//El juego ha terminado. Comprobamos quien ha ganado
+			
+			boolean winner = this.scores.get(player.getSession().getId()) > this.scores.get(opponent.getSession().getId());
+			
+			if(winner) {
+				this.sendWinnerNotification(player);
+				this.sendLoserNotification(opponent);
+				if (this.playerA.getSession().getId().equals(idSession)) {
+					this.playerAWins = true;
+				}
+				else {
+					this.playerBWins = true;
+				}
+			}
+			else {
+				this.sendWinnerNotification(opponent);
+				this.sendLoserNotification(player);
+				
+				if (this.playerA.getSession().getId().equals(idSession)) {
+					this.playerBWins = true;
+				}
+				else {
+					this.playerAWins = true;
+				}
+				
+			}
+			
+			this.endMatch();
+			
+		}
+		else {
+			this.timer.start();
+		}
+	}
+	
+	private void sendWinnerNotification (User winner) throws JSONException {
+		try {
+			JSONObject jsWinner = new JSONObject();
+			jsWinner.put("winner", true);
+			jsWinner.put("type", "MATCH_END");
+			winner.sendMessage(jsWinner.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Excepción al enviar mensaje en rendirse al ganador");
+		}
+	}
+	
+	private void sendLoserNotification (User loser) throws JSONException {
+		try {
+			JSONObject jsLoser = new JSONObject();
+			jsLoser.put("winner", false);
+			jsLoser.put("type", "MATCH_END");
+			loser.sendMessage(jsLoser.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Excepción al enviar mensaje en rendirse al perdedor");
+		}
 	}
 
 	public void toggleTurn(String idSession) throws Exception {
@@ -324,47 +377,27 @@ public class Match {
 		}
 
 		// Primero mandamos un mensaje al jugador que se ha rendido
-		try {
-			JSONObject jsLoser = new JSONObject();
-			jsLoser.put("winner", false);
-			jsLoser.put("type", "MATCH_END");
-			player.sendMessage(jsLoser.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.sendLoserNotification(player);
 
 		// Después, mandamos el mensaje al jugador que ha ganado
-		try {
-			JSONObject jsWinner = new JSONObject();
-			jsWinner.put("winner", true);
-			jsWinner.put("type", "MATCH_END");
-			opponent.sendMessage(jsWinner.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		this.sendWinnerNotification(opponent);
+
 		this.endMatch();
 	}
 
-	public void changeLetters(String idSession, Character[] letters) {
+	public void changeLetters(String idSession, Character[] letters) throws Exception {
 		User player = this.playerA.getSession().getId().equals(idSession) ? playerA : playerB;
-
+		
+		String nuevasLetras = this.board.changeLetters(letters);
+		
 		try {
 			JSONObject jsa = new JSONObject();
 			jsa.put("type", "NEW_LETTERS");
-			jsa.put("letters", board.getLetters(letters.length));
-
-			// Devolver las letras del usuario al listado de letras
-			for (Character letter : letters) {
-				this.board.addLetter(letter);
-			}
+			jsa.put("letters", nuevasLetras);
 			player.sendMessage(jsa.toString());
 
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("Excepción al enviar mensaje en changeLetters");
 		} catch (JSONException e) {
 
 		}
@@ -373,7 +406,6 @@ public class Match {
 	public void expiredTime() throws JSONException {
 		User player;
 		User opponent;
-		MovementResult result;
 
 		if (this.playerA == this.gameTurn) {
 			player = playerA;
@@ -384,140 +416,68 @@ public class Match {
 			opponent = playerA;
 			playerAWins = true;
 		}
-		
+
 		// Primero mandamos un mensaje al jugador que tenía el turno
-		try {
-			JSONObject jsLoser = new JSONObject();
-			jsLoser.put("winner", false);
-			jsLoser.put("type", "MATCH_END");
-			player.sendMessage(jsLoser.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.sendLoserNotification(player);
 
 		// Después, mandamos el mensaje al jugador que ha ganado
-		try {
-			JSONObject jsWinner = new JSONObject();
-			jsWinner.put("winner", true);
-			jsWinner.put("type", "MATCH_END");
-			opponent.sendMessage(jsWinner.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
+		this.sendWinnerNotification(opponent);
+
+
 		this.endMatch();
 	}
-	
-	//Un jugador se desconecta
+
+	// Un jugador se desconecta
 	public void logout(String idSession) throws JSONException {
 		this.timer.stop();
 		User winner;
-		User loser;
 
 		if (this.playerA.getSession().getId().equals(idSession)) {
-			loser = playerA;
 			winner = playerB;
 			playerBWins = true;
 		} else {
-			loser = playerB;
 			winner = playerA;
 			playerAWins = true;
 		}
 		
-		try {
-			JSONObject jsWinner = new JSONObject();
-			jsWinner.put("winner", true);
-			jsWinner.put("type", "MATCH_END");
-			winner.sendMessage(jsWinner.toString());
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		
+		this.sendWinnerNotification(winner);
 		this.endMatch();
-		
+
 	}
-	
+
 	private void endMatch() {
 		this.timer.kill();
-		
-		//Decirle al Controller que la borre de partidas en juego
+
+		// Decirle al Controller que la borre de partidas en juego
 		Manager.get().endMatch(this.id);
-		
-		//¿Cerrar websocket?
-		
+
 		this.status = MatchStatus.FINISHED;
 		this.matchRepo.save(this);
 	}
 	
-	private ArrayList<Character> testingLetters() {
-		ArrayList<Character> letters = new ArrayList();
+	//Pide al tablero nuevas letras para un determinado jugador.
+	//Actualiza el número de letras que tiene ese jugador como
+	//la diferencia entre el número de letras jugadas y el número
+	//de letras recibidas por el tablero
+	private String getLetters(User player, int jugadas) {
 		
-		//Turno 1: Jugador A (ESCUDO)
-		letters.add('S');
-		letters.add('C');
-		letters.add('O');
-		letters.add('D');
-		letters.add('E');
-		letters.add('E');
-		letters.add('U');
+		String newLetters = this.board.getLetters(jugadas);
 		
-		//Turno 2: Jugador B (CERA)
-		letters.add('R');
-		letters.add('E');
-		letters.add('A');
-		letters.add('S');
-		letters.add('Ñ');
-		letters.add('O');
-		letters.add('P');
+		int nuevas;
 		
-		//Turno 3: Jugador A recibe depués de ESCUDO (RETAN)
-		letters.add('N');
-		letters.add('T');
-		letters.add('A');
-		letters.add('R');
-		letters.add('I');
-		letters.add('A');
+		if(newLetters.equals("")) 
+			nuevas = 0;
+		else
+			nuevas = newLetters.split(" ").length;
 		
+		System.out.println(player.getUserName() + " tenía " +  this.letters.get(player.getSession().getId()) + "letras y juega " + jugadas);
+		System.out.println("El servidor le da " + nuevas);
 		
-		//Turno 4: Jugador B recibe después de CERA (SALID)
-		letters.add('A');
-		letters.add('I');
-		letters.add('L');
+		this.letters.put(player.getSession().getId(), (this.letters.get(player.getSession().getId()) - jugadas + nuevas));
 		
+		System.out.println("a " + player.getUserName() + " le quedan " + this.letters.get(player.getSession().getId()) + " letras");
 		
-		//Turno 5: Jugador A recibe después de RETAN (AIRE)
-		letters.add('L');
-		letters.add('N');
-		letters.add('I');
-		letters.add('O');
-
-		
-		//Turno 6: Jugador B recibe después de SALID (PIÑA)
-		letters.add('I');
-		letters.add('A');
-		letters.add('E');
-		
-		//Turno 7: Jugador A recibe después de AIRE (SONIA)
-		letters.add('A');
-		letters.add('A');
-		letters.add('A');
-		
-		//Turno 8: B pasa su turno
-		
-		//Turno 9: Jugador A recibe después de SAMUEL 
-		letters.add('Z');
-		letters.add('O');
-		letters.add('T');
-		letters.add('X');
-		
-
-	
-		return letters;
+		return newLetters;
 	}
-
 
 }

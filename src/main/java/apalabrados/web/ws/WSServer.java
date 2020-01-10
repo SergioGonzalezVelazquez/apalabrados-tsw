@@ -19,7 +19,6 @@ import apalabrados.model.Match;
 @Component
 public class WSServer extends TextWebSocketHandler {
 	private static ConcurrentHashMap<String, WebSocketSession> sessionsById = new ConcurrentHashMap<>();
-	private static ConcurrentHashMap<String, WebSocketSession> sessionsByUser = new ConcurrentHashMap<>();
 
 	@Override
 	public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -35,9 +34,9 @@ public class WSServer extends TextWebSocketHandler {
 	
 	@Override
 	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception{
-		
 		Match match= (Match) session.getAttributes().get("match");
 		match.logout(session.getId());		
+		sessionsById.remove(session.getId());
 	}
 
 	@Override

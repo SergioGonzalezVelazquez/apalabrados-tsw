@@ -132,10 +132,6 @@ public class WebController {
 		if (session.getAttribute("user") == null)
 			throw new Exception("Identifícate antes de jugar");
 		
-		/*
-		if (session.getAttribute("match") != null)
-			throw new Exception("Ya tienes una partida en juego");
-		*/
 		User user = (User) session.getAttribute("user");
 		Match match = new Match();
 		
@@ -202,10 +198,7 @@ public class WebController {
 
 		if (this.pendingMatches.isEmpty())
 			throw new Exception("No hay partidas pendientes. Crea una.");
-		
-		//Comprobar si este user-agent ya tiene una partida en juego
-		
-		
+				
 		Match match = this.pendingMatches.remove(0);
 		match.setPlayerB(user);
 		session.setAttribute("match", match);

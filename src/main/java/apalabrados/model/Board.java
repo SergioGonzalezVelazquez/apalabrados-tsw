@@ -19,10 +19,8 @@ import apalabrados.web.controllers.Manager;
 public class Board implements LetterDistribution {
 	static Map<Character, Integer> puntos = LETTER_VALUE;
 	private Square[][] squares = new Square[15][15];
-	private ArrayList<Square> provisionalSquares = new ArrayList();
 	private ArrayList<Character> letters = new ArrayList();
 	boolean centroOcupado = false;
-	private UserRepository userRepo;
 	private PalabraRepository palabrasRepo;
 	private List<Cadena> cadenasPendientes = new ArrayList<>();
 	private List<JSONObject> jugadaPendiente;
@@ -30,7 +28,21 @@ public class Board implements LetterDistribution {
 	public Board() {
 		this.palabrasRepo = Manager.get().getPalabrasRepo();
 		this.initializeLetters();
-
+		this.createBoard();
+	}
+	
+	public Board (boolean testing) {
+		this.palabrasRepo = Manager.get().getPalabrasRepo();
+		if(testing) 
+			this.initializeTestingLetters();
+		else
+			this.initializeLetters();
+		
+		this.createBoard();
+	}
+	
+	
+	private void createBoard() {
 		// Crear las 255 casillas del tablero
 		for (int i = 0; i < 15; i++)
 			for (int j = 0; j < 15; j++)
@@ -305,6 +317,68 @@ public class Board implements LetterDistribution {
 		// Shuffle letras
 		Collections.shuffle(this.letters);
 	}
+	
+	private void initializeTestingLetters() {
+		
+		//Turno 1: Jugador A (ESCUDO)
+		letters.add('S');
+		letters.add('C');
+		letters.add('O');
+		letters.add('D');
+		letters.add('E');
+		letters.add('E');
+		letters.add('U');
+		
+		//Turno 2: Jugador B (CERA)
+		letters.add('R');
+		letters.add('E');
+		letters.add('A');
+		letters.add('S');
+		letters.add('Ñ');
+		letters.add('O');
+		letters.add('P');
+		
+		//Turno 3: Jugador A recibe depués de ESCUDO (RETAN)
+		letters.add('N');
+		letters.add('T');
+		letters.add('A');
+		letters.add('R');
+		letters.add('I');
+		letters.add('A');
+		
+		
+		//Turno 4: Jugador B recibe después de CERA (SALID)
+		letters.add('A');
+		letters.add('I');
+		letters.add('L');
+		
+		
+		//Turno 5: Jugador A recibe después de RETAN (AIRE)
+		letters.add('L');
+		letters.add('N');
+		letters.add('I');
+		letters.add('O');
+
+		
+		//Turno 6: Jugador B recibe después de SALID (PIÑA)
+		letters.add('I');
+		letters.add('A');
+		letters.add('E');
+		letters.add('A');
+		
+		//Turno 7: Jugador A recibe después de AIRE (SONIA)
+		letters.add('A');
+		letters.add('A');
+		letters.add('S');
+		
+		
+		//Turno 9: Jugador B recibe
+		letters.add('R');
+		letters.add('V');
+		letters.add('N');
+		
+	}
+
 
 	public String getLetters(int n) {
 		String r = "";
@@ -322,6 +396,20 @@ public class Board implements LetterDistribution {
 
 		return r;
 	}
+	
+	public String changeLetters(Character[] letters) {
+		if(letters.length > this.availableLetters()) {
+			return "";
+		}
+		
+		// Devolver las letras del usuario al listado de letras
+		for (Character letter : letters) {
+			this.addLetter(letter);
+		}
+		
+		return this.getLetters(letters.length);
+		
+	}
 
 	public int availableLetters() {
 		return this.letters.size();
@@ -336,5 +424,7 @@ public class Board implements LetterDistribution {
 	public void addLettersStart(ArrayList<Character> letters) {
 		this.letters.addAll(0, letters);
 	}
+	
+	
 
 }

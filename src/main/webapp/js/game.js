@@ -657,6 +657,9 @@ function GameViewModel(user) {
             else if (jso.type == "MOVEMENT") {
                 console.log("movimiento: ")
                 console.log(JSON.stringify(jso))
+
+                //La respuesta contiene excepciones. Lo renderizaremos de una forma u otra
+                //dependiendo de la cantidad de excepciones recibidas.
                 if (jso.exceptions && jso.exceptions.length > 0) {
                     if (jso.exceptions.length == 1) {
                         self.displayNotification("notification-warning", jso.exceptions[0]);
@@ -667,11 +670,16 @@ function GameViewModel(user) {
                         });
                         self.displayNotification("notification-warning", "Esta jugada tiene algunos problemas: " + problems);
                     }
-                } else {
+                } 
+
+                //La respuesta no tiene excepciones. 
+                else {
                     self.player1().turn(false);
                     self.player2().turn(true);
                     self.player1().score(jso.score);
                     self.tablero().availablePieces(jso.availablePieces);
+                    
+                    //Al menos se ha jugado una palabra... (no ha sido un "pasar")
                     if (jso.valid && jso.valid.length > 0) {
                         var timestamp = new Date();
                         var jugadas = jso.valid;
@@ -680,6 +688,7 @@ function GameViewModel(user) {
                                 addZero(timestamp.getSeconds()) + "]\t" + self.player1().name() + ` jugó ${jugada.sequence} por ${jugada.points} puntos`);
                         });
 
+                        //Hacer permanentes las casillas que se han jugado (poner ficha como imagen oscura)
                         casillasPermanentes(jso.valid);
 
                         //Vaciar casillas jugadas y quitar del panel
@@ -690,17 +699,18 @@ function GameViewModel(user) {
                         }
                         self.tablero().casillasJugadas.removeAll();
 
-                        //Binding letters new letters
-                        var letters = jso.letters.split(' ');
-                        for (var i = 0; i < letters.length; i++) {
-                            //self.tablero().panel.push(letters[i]);
-                            console.log("nueva letra: " + letters[i])
-                            self.tablero().panel.push(new Ficha(ko, letters[i], false));
+                        //Actualizar letras en el panel (si se han recibido nuevas)
+                        if(jso.letters != ""){
+                            var letters = jso.letters.split(' ');
+                            for (var i = 0; i < letters.length; i++) {
+                                //self.tablero().panel.push(letters[i]);
+                                self.tablero().panel.push(new Ficha(ko, letters[i], false));
+                            }
                         }
-                        console.log("Panel después de actualizar index:")
-                        console.log(self.tablero().panel())
-
-                    } else {
+                    } 
+                    
+                    //El jugador ha pasado su turno. 
+                    else {
                         var timestamp = new Date();
                         self.movementHistory.unshift("[" + addZero(timestamp.getHours()) + ":" + addZero(timestamp.getMinutes()) + ":" +
                             addZero(timestamp.getSeconds()) + "]\t" + self.player1().name() + " pasó su turno sin movimientos");
@@ -741,8 +751,6 @@ function GameViewModel(user) {
 
                 //Launch timer
                 self.launchCountdown();
-
-                //Cambio de letras
             }
 
             //El jugador recibe nuevas letras después de solicitarlo

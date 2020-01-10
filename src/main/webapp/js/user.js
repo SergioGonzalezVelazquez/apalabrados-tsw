@@ -102,7 +102,8 @@ function UserViewModel() {
 			"photo": response.photo
 		}
 		sessionStorage.setItem("user", JSON.stringify(user));
-		window.location = "http://localhost:8080/game.html";
+		
+		window.location.href = "game.html";
 	}
 
 	function error(response) {

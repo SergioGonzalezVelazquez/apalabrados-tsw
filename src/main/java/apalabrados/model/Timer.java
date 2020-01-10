@@ -41,14 +41,14 @@ public class Timer implements Runnable {
 					this.countdown--;
 					if(this.countdown == 0) {
 						//Tiempo expirado, notificar la partida
-						this.match.expiredTime();
 						this.stop();
+						this.match.expiredTime();
 					}
 				}
 				Thread.sleep(1000L); // 1000L = 1000ms = 1 second
 			} catch (InterruptedException e) {
+				e.printStackTrace();
 			} catch (JSONException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}

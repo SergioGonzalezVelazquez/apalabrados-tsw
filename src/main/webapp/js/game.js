@@ -479,7 +479,7 @@ function GameViewModel(user) {
     	    logoutOKGoogle();
     	}
         sessionStorage.clear();
-        window.location = "http://localhost:8080/index.html";
+        window.location.href = "index.html";
         console.log("Logout OK")
     }
 
@@ -550,7 +550,7 @@ function GameViewModel(user) {
      * Crear ws y controlar mensajes entrantes
      ***********************************/
     function gameOK(response) {
-        self.ws = new WebSocket("ws://localhost:8080/wsServer");
+        self.ws = new WebSocket("ws://" + window.location.host + "/wsServer");
         response = JSON.parse(response);
 
         //Guardar id partida en sessionStorage
@@ -1157,7 +1157,7 @@ class ResultadoJugada {
 //initializeNavbar();
 user = sessionStorage.getItem('user')
 if (!user) {
-    window.location = "http://localhost:8080/index.html";
+    window.location.href = "index.html";
 } else {
     var game = new GameViewModel(JSON.parse(user));
     ko.applyBindings(game);

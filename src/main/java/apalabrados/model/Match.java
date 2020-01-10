@@ -184,7 +184,6 @@ public class Match {
 		}
 
 		this.timer.start();
-		
 		this.matchRepo.save(this);
 	}
 
@@ -411,9 +410,45 @@ public class Match {
 		this.endMatch();
 	}
 	
+	//Un jugador se desconecta
+	public void logout(String idSession) throws JSONException {
+		this.timer.stop();
+		User winner;
+		User loser;
+
+		if (this.playerA.getSession().getId().equals(idSession)) {
+			loser = playerA;
+			winner = playerB;
+			playerBWins = true;
+		} else {
+			loser = playerB;
+			winner = playerA;
+			playerAWins = true;
+		}
+		
+		try {
+			JSONObject jsWinner = new JSONObject();
+			jsWinner.put("winner", true);
+			jsWinner.put("type", "MATCH_END");
+			winner.sendMessage(jsWinner.toString());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		this.endMatch();
+		
+	}
+	
 	private void endMatch() {
 		this.timer.kill();
+		
+		//Decirle al Controller que la borre de partidas en juego
 		Manager.get().endMatch(this.id);
+		
+		//¿Cerrar websocket?
+		
 		this.status = MatchStatus.FINISHED;
 		this.matchRepo.save(this);
 	}
@@ -483,6 +518,6 @@ public class Match {
 	
 		return letters;
 	}
-	
+
 
 }

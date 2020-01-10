@@ -131,17 +131,20 @@ public class WebController {
 	public String createMatch(HttpSession session) throws Exception {
 		if (session.getAttribute("user") == null)
 			throw new Exception("Identifícate antes de jugar");
-
-		User user = (User) session.getAttribute("user");
-
-		Match match = new Match();
 		
+		/*
+		if (session.getAttribute("match") != null)
+			throw new Exception("Ya tienes una partida en juego");
+		*/
+		User user = (User) session.getAttribute("user");
+		Match match = new Match();
 		
 		if (this.TESTING) {
 			match.setTesting(true);
 		}
 		
 		match.setPlayerA(user);
+		session.setAttribute("match", match);
 		this.pendingMatches.add(match);
 		JSONObject jso = new JSONObject();
 		jso.put("type", "PARTIDA CREADA");
@@ -205,6 +208,7 @@ public class WebController {
 		
 		Match match = this.pendingMatches.remove(0);
 		match.setPlayerB(user);
+		session.setAttribute("match", match);
 		this.inPlayMatches.put(match.getId(), match);
 		JSONObject jso = new JSONObject();
 		jso.put("type", "PARTIDA LISTA");

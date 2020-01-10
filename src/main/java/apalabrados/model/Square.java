@@ -69,9 +69,6 @@ public class Square {
 	}
 	
 	public void setProvisional(boolean provisional) {
-		System.out.println("setProvisional");
-		if(!provisional)
-			System.out.println(this.row + "," + this.col + " hecha permanente");
 		this.provisional = provisional;
 	}
 	

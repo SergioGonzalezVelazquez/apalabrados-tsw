@@ -308,10 +308,15 @@ public class Board implements LetterDistribution {
 
 	public String getLetters(int n) {
 		String r = "";
-		for (int i = 0; i < n; i++)
+		int i = 0;
+		
+		while (i<n && !this.letters.isEmpty()) {
 			r = r + this.letters.remove(0) + " ";
+			i++;
+		}
+
 		// Remove last space character
-		if (n > 0) {
+		if (r.length() > 1) {
 			r = r.substring(0, r.length() - 1);
 		}
 

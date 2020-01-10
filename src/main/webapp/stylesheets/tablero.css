@@ -220,14 +220,17 @@
 }
 
 .player1-turn {
+  font-size: 0.9em;
   background-color: #F15A29;
   color: white;
   font-weight: bold;
+  margin-bottom: .3em;
 }
-
-.timer {
-  font-size: 2em;
+/*
+#timer {
+  font-size: 1.6em;
 }
+*/
 
 .player2-info {
   background-color: white;
@@ -241,6 +244,7 @@
 }
 
 .player2-turn {
+  font-size: 0.9em;
   background-color: #1BB24B;
   color: white;
   font-weight: bold;
@@ -272,6 +276,7 @@
   font-weight: bold;
   font-size: 2em;
   float: right;
+  padding-bottom: .3em;
 
 }
 
@@ -488,7 +493,7 @@
 
 .log-list {
   padding: 0;
-  max-height: 15em;
+  max-height: 8em;
   /* 1.25 x 4 */
   overflow-y: auto;
 }
@@ -510,39 +515,46 @@
   height: 3em;
   margin-left: -7px;
 }
+
 /*Media Query para tamaño móvil se ha usado el galaxy*/
 
 @media screen and (max-width: 360px) {
-    .scrabble-table {
-      align: center;
-      height: 100vw;
-      width: 100vw;
-    }
+  .scrabble-table {
+    align: center;
+    height: 100vw;
+    width: 100vw;
+  }
+
   .scrabble-td {
-      border-radius: 0.2em;
-	  font-size: 0.6em;
-	  padding:0px;
-    }
-    .letters li {
+    border-radius: 0.2em;
+    font-size: 0.6em;
+    padding: 0px;
+  }
+
+  .letters li {
     margin-right: 7vw;
     width: 6.66vw;
     height: 6.66vw;
   }
-  .ui-draggable{
+
+  .ui-draggable {
     width: 6.66vw;
     height: 6.66vw;
   }
+
   .timer {
     font-size: 0.9em;
   }
-    .border {
-      font-size: 0.7em;
-      line-height: 1.7em;
+
+  .border {
+    font-size: 0.7em;
+    line-height: 1.7em;
   }
 }
 
 /*Media Query para tamaño tablet, se ha usado kidle fire*/
-@media screen and (min-width: 361px) and (max-width: 768px), (orientation:portrait) and (min-width: 769px){
+@media screen and (min-width: 361px) and (max-width: 768px),
+(orientation:portrait) and (min-width: 769px) {
   .scrabble-table {
     border-spacing: 0.1em;
     height: 97.2vw;
@@ -553,30 +565,38 @@
     border-radius: 0.2em;
 
   }
+
   .scrabble-td {
-      border-radius: 0.2em;
+    border-radius: 0.2em;
     font-size: 1.2em;
-    padding:0px;
-    }
-    .letters li {
+    padding: 0px;
+  }
+
+  .letters li {
     margin-right: 2vw;
     width: 6.66vw;
     height: 6.66vw;
   }
-  .ui-draggable{
+
+  .ui-draggable {
     width: 6.66vw;
     height: 6.66vw;
   }
+
   .timer {
     font-size: 1em;
   }
-    .border {
-      font-size: 1em;
-      line-height: 1.7em;
+
+  .border {
+    font-size: 1em;
+    line-height: 1.7em;
   }
-  .btn-group-sm>.btn, .btn-sm {
+
+  .btn-group-sm>.btn,
+  .btn-sm {
     font-size: 1.875rem;
   }
+
   .material-icons {
     font-size: 1.5em;
   }
@@ -584,7 +604,8 @@
 }
 
 /*Media Query para tamaños más grandes*/
-@media screen and (min-width: 769px) , (orientation:landscape){
+@media screen and (min-width: 769px),
+(orientation:landscape) {
   .scrabble-table {
     border-spacing: 0.1em;
     height: 90vh;
@@ -595,24 +616,27 @@
     border-radius: 0.2em;
 
   }
+
   .scrabble-td {
-      border-radius: 0.2em;
+    border-radius: 0.2em;
     font-size: 1em;
-    padding:0px;
-    }
-    .letters li {
+    padding: 0px;
+  }
+
+  .letters li {
     width: 6vh;
     height: 6vh;
   }
-  .ui-draggable{
+
+  .ui-draggable {
 
     width: 6vh;
     height: 6vh;
   }
 
-    .border {
-      font-size: 1em;
-      line-height: 1.7em;
+  .border {
+    font-size: 1em;
+    line-height: 1.7em;
   }
 }
 

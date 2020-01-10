@@ -3,8 +3,10 @@ package apalabrados.web.ws;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -24,6 +26,18 @@ public class WSServer extends TextWebSocketHandler {
 		sessionsById.put(session.getId(), session);
 		User user = (User) session.getAttributes().get("user");
 		user.setWebSocketSession(session);
+		
+		Match match= (Match) session.getAttributes().get("match");
+		System.out.println("match: ");
+		System.out.println(match.getId());
+		
+	}
+	
+	@Override
+	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception{
+		
+		Match match= (Match) session.getAttributes().get("match");
+		match.logout(session.getId());		
 	}
 
 	@Override

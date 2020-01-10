@@ -147,7 +147,7 @@
       </div>
 
       <!-- Col 2: Información sobre la partida -->
-      <div class="col-lg-5 col-sm-12 pt-2 pr-lg-5 pl-0 ">
+      <div class="col-lg-5 col-sm-12 col-md-12 pt-2 pr-lg-5 pl-0 ">
         <!-- Letras del juego-->
 
         <!-- ko using : tablero -->
@@ -204,8 +204,8 @@
           <div class="col" data-bind="using: player1">
             <div class="row player1-info mr-1">
               <div class="col-3 border border-ligh">
-                <img data-bind="attr: { src: letterImg, alt: letterTxt }" width="30em" height="30em"
-                  class="d-inline-block align-center" alt="">
+                <img data-bind="attr: { src: letterImg, alt: letterTxt }" 
+                  class="d-inline-block align-center player-letter" alt="">
               </div>
               <div class="col-4 border border-ligh">
                 <div class="row-sm-12" id="txtP1Name" data-bind="text : name">
@@ -237,8 +237,8 @@
           <div class="col" data-bind="using: player2">
             <div class="row player2-info ml-1">
               <div class="col-5 border border-ligh">
-                <img data-bind="attr: { src: letterImg, alt: letterTxt }" width="30em" height="30em"
-                  class="d-inline-block align-center" alt="">
+                <img data-bind="attr: { src: letterImg, alt: letterTxt }" 
+                  class="d-inline-block align-center player-letter" alt="">
               </div>
               <div class="col-7 border border-ligh">
                 <div class="row-sm-12" data-bind="text : name">

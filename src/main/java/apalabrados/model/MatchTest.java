@@ -90,23 +90,30 @@ public class MatchTest {
 		// Pulsar botón abandonar
 		dLoser.findElement(By.id("btnRendirse")).click();
 		Thread.sleep(1000);
-		
-		System.out.println("boton pulsado");
-		//comprueba que en el perdedor ha salido la notificación de perder
-		WebElement modalLoser = dLoser.findElement(By.id("dialogLoser"));
-		Assert.assertEquals(true, modalLoser.isDisplayed());
-		System.out.println("loser true");
-		
+		comprobarGanador(dWinner);
+		comprobarPerdedor(dLoser);
+	}
+	
+	private void comprobarGanador(WebDriver dWinner) {
 		//comprueba que en el ganador ha salido la notificación de ganar
 		WebElement modalWinner = dWinner.findElement(By.id("dialogWinner"));
 		Assert.assertEquals(true, modalWinner.isDisplayed());
-		System.out.println("winner true");
 	}
 	
+	private void comprobarPerdedor(WebDriver dLoser) {
+		//comprueba que en el perdedor ha salido la notificación de perder
+		WebElement modalLoser = dLoser.findElement(By.id("dialogLoser"));
+		Assert.assertEquals(true, modalLoser.isDisplayed());
+	}
 	
 	private void llamar(WebDriver driver) {
 		// Pulsa el botón pasar
 		driver.findElement(By.id("btnLlamar")).click();
+	}
+	
+	private void comprobarValor(WebDriver driver, String elementId,  String valor) {
+		WebElement txtPuntos = driver.findElement(By.id(elementId));
+		
 	}
 
 	private void play(WebDriver driver, boolean isValid) throws InterruptedException {
@@ -133,9 +140,130 @@ public class MatchTest {
 			Assert.assertEquals(true, txtP1Turn.isDisplayed());
 		}
 	}
+	
+	@Test
+	public void testPartidaCompleta() throws InterruptedException {
+		// Login P1
+		login(driverP1, "pepe@mail.com", "pepe");
+
+		// El jugador 1 crea partida
+		driverP1.findElement(By.id("btnCrearPartida")).click();
+
+		// Login P2
+		login(driverP2, "ana@mail.com", "ana");
+
+		// P2 se une a la partida
+		driverP2.findElement(By.id("btnUnirPartida")).click();
+
+		// P1 forma la palabra ESCUDO
+		movement(driverP1, 7, 4, 4); // E
+		movement(driverP1, 7, 5, 0); // S
+		movement(driverP1, 7, 6, 1); // C
+		movement(driverP1, 7, 7, 6); // U
+		movement(driverP1, 7, 8, 3); // D
+		movement(driverP1, 7, 9, 2); // O
+
+		// P1 pulsa jugar y confirma su jugada
+		play(driverP1, true);
+
+		// P2 forma CERA
+		movement(driverP2, 8, 6, 1); // E
+		movement(driverP2, 9, 6, 0); // R
+		movement(driverP2, 10, 6, 2); // A
+
+		// P2 pulsa jugar y confirma su jugada
+		play(driverP2, true);
+
+		// P1 forma la palabra RETAN
+		movement(driverP1, 9, 7, 0); // E
+		movement(driverP1, 9, 8, 2); // T
+		movement(driverP1, 9, 9, 3); // A
+		movement(driverP1, 9, 10, 1); // N
+
+		// P1 pulsa jugar y confirma su jugada
+		play(driverP1, true);
+
+		// P2 forma SALID
+		movement(driverP2, 3, 8, 0); // S
+		movement(driverP2, 4, 8, 4); // A
+		movement(driverP2, 5, 8, 6); // L
+		movement(driverP2, 6, 8, 5); // I
+
+		// P2 pulsa jugar y confirma su jugada
+		play(driverP2, true);
+
+		// P1 forma la palabra AIRE
+		movement(driverP1, 4, 4, 2); // A
+		movement(driverP1, 5, 4, 1); // I
+		movement(driverP1, 6, 4, 0); // R
+
+		// P1 pulsa jugar y confirma su jugada
+		play(driverP1, true);
+
+		// CASO ESPECIAL: Probar palabras con Ñ
+		// P2 forma PIÑA
+		movement(driverP2, 5, 3, 2); // P
+		movement(driverP2, 5, 5, 0); // Ñ
+		movement(driverP2, 5, 6, 4); // A
+
+		// P2 pulsa jugar y confirma su jugada
+		play(driverP2, true);
+
+		// CASO ESPECIAL: Probar nombres propios
+		// P1 forma Sonia
+		movement(driverP1, 3, 9, 3); // O
+		movement(driverP1, 3, 10, 1); // N
+		movement(driverP1, 3, 11, 2); // I
+		movement(driverP1, 3, 12, 4); // A
+
+		// P1 pulsa jugar y confirma su jugada
+		play(driverP1, true);
+
+		// CASO ESPECIAL: P2 pasa su turno
+		pasar(driverP2);
+
+		//P1 forma palabra que no existe (LM)
+		movement(driverP1, 2, 10, 2); // ZN
+		play(driverP1, false);
+		
+
+		// CASO ESPECIAL: P1 llama a sus letras y forma otra palabra (LA)
+		llamar(driverP1);
+		Thread.sleep(1000);
+		movement(driverP1, 2, 12, 0); // LA
+		play(driverP1, true);
+		
+
+		//P2 juega LAVARON
+		movement(driverP2, 4, 12, 5); // V
+		movement(driverP2, 5, 12, 3); // A
+		movement(driverP2, 6, 12, 4); // R
+		movement(driverP2, 7, 12, 0); // O
+		movement(driverP2, 8, 12, 6); // N
+		play(driverP2, true);
+		
+		//P1 juega LAS
+		movement(driverP1, 5, 9, 0); // A
+		movement(driverP1, 5, 10, 1); // S
+		
+		comprobarValor(driverP1, "txtP1Score", "36");
+		comprobarValor(driverP2, "txtP1Score", "57");
+		
+		//No hay fichas restantes
+		comprobarValor(driverP1, "txtFichasRestantes", "0");
+		
+		play(driverP1, true);
+
+		Thread.sleep(2000);		
+		//La partida debe haber finalizado porque no hay más letras en el servidor
+		comprobarGanador(driverP2);
+		comprobarPerdedor(driverP1);
+		
+
+	}
 
 	@Test
-	public void game() throws InterruptedException {
+	public void testRendirse() throws InterruptedException {
 		// Login P1
 		login(driverP1, "pepe@mail.com", "pepe");
 
@@ -233,7 +361,6 @@ public class MatchTest {
 
 		// CASO ESPECIAL: P2 Abandona la partida
 		abandonar(driverP2, driverP1);
-
 	}
 
 }

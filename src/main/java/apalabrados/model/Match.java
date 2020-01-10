@@ -470,13 +470,8 @@ public class Match {
 		else
 			nuevas = newLetters.split(" ").length;
 		
-		System.out.println(player.getUserName() + " tenía " +  this.letters.get(player.getSession().getId()) + "letras y juega " + jugadas);
-		System.out.println("El servidor le da " + nuevas);
 		
 		this.letters.put(player.getSession().getId(), (this.letters.get(player.getSession().getId()) - jugadas + nuevas));
-		
-		System.out.println("a " + player.getUserName() + " le quedan " + this.letters.get(player.getSession().getId()) + " letras");
-		
 		return newLetters;
 	}
 

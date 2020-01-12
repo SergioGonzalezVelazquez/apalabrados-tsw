@@ -552,13 +552,19 @@ function GameViewModel(user) {
     function gameOK(response) {
         self.ws = new WebSocket("ws://" + window.location.host + "/wsServer");
         response = JSON.parse(response);
+        console.log(response)
 
         //Guardar id partida en sessionStorage
         if (response.idPartida)
             sessionStorage.idPartida = response.idPartida;
 
         self.ws.onopen = function (event) {
+            console.log("on open");
+            var jso = event.data;
+            console.log(event.data)
+            console.log(jso);
             if (response.type == "PARTIDA LISTA") {
+                console.log("partida lista")
                 var mensaje = {
                     type: "INICIAR PARTIDA",
                     idPartida: response.idPartida
@@ -906,22 +912,7 @@ function GameViewModel(user) {
             console.log("no tienes el turno")
         }
     }
-
-
-    //Panel de botones: JUGAR
-    this.pasar = function () {
-        if (self.player1().turn) {
-            var mensaje = {
-                type: "PASO_TURNO",
-                idPartida: sessionStorage.getItem('idPartida'),
-            };
-            self.ws.send(JSON.stringify(mensaje));
-
-        } else {
-            console.log("no tienes el turno")
-        }
-    }
-
+    
     /**
      * Panel de botones: PASAR
      * Pasar el turno al siguiente jugador

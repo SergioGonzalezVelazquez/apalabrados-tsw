@@ -1,4 +1,6 @@
 package apalabrados.utils;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
 
 import javax.mail.Authenticator;
@@ -12,25 +14,33 @@ import javax.mail.internet.MimeMessage;
 
 public class EMailSenderService {
 	private final Properties properties = new Properties();
-	private String smtpHost, startTTLS, port;
+	private String smtpHost, startTTLS, smtpPort;
 	private String remitente, serverUser, userAutentication, pwd;
+	private String serverIp;
 	
 	public EMailSenderService() {
 		this.smtpHost="smtp.gmail.com";
 		this.startTTLS="true";
-		this.port="465";
+		this.smtpPort="465";
 		this.remitente="apalabrados.tsw@gmail.com";
 		this.serverUser="apalabrados.tsw@gmail.com";
 		this.userAutentication="true";
 		this.pwd="apalabrados123";
-		
+
+		try {
+			this.serverIp = InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+
+			this.serverIp = "localhost";
+		}
+				
 		properties.put("mail.smtp.host", this.smtpHost);  
         properties.put("mail.smtp.starttls.enable", this.startTTLS);  
-        properties.put("mail.smtp.port", this.port);  
+        properties.put("mail.smtp.port", this.smtpPort);  
         properties.put("mail.smtp.mail.sender", this.remitente);  
         properties.put("mail.smtp.user", this.serverUser);  
         properties.put("mail.smtp.auth", this.userAutentication);
-        properties.put("mail.smtp.socketFactory.port", this.port);
+        properties.put("mail.smtp.socketFactory.port", this.smtpPort);
         properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
         properties.put("mail.smtp.socketFactory.fallback", "false");
 	}
@@ -45,7 +55,7 @@ public class EMailSenderService {
         msg.setText(("<p><strong>Hola</strong></p>"
         		+ "<p>Estás recibiendo este correo porque hiciste una solicitud de recuperación de contraseña para tu cuenta. Haga click en el"
         		+ " siguiente enlace para definir una nueva contraseña:</p>"
-        		+  "http://localhost:8080/pwdReset.html?code=" + codigo
+        		+  "http://"+ this.serverIp + ":8080/pwdReset.html?code=" + codigo
         		+ "<p>Si no realizaste esta solicitud, ignore este mensaje</p>"
         		+ "<p>Saludos, Apalabrados-TSW</p>" 
         		), "UTF-8", "html");

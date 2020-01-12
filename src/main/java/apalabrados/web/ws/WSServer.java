@@ -15,6 +15,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import apalabrados.model.User;
 import apalabrados.web.controllers.WebController;
 import apalabrados.model.Match;
+import apalabrados.model.MatchStatus;
 
 @Component
 public class WSServer extends TextWebSocketHandler {
@@ -27,16 +28,20 @@ public class WSServer extends TextWebSocketHandler {
 		user.setWebSocketSession(session);
 
 		Match match = (Match) session.getAttributes().get("match");
-		System.out.println("match: ");
-		System.out.println(match.getId());
-
 	}
 
 	@Override
-	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) {
 		Match match = (Match) session.getAttributes().get("match");
-		System.out.println(closeStatus.toString());
-		match.logout(session.getId());
+		
+		//Si la partida no está terminada, alguno de losjugadores ha cerrado su navegador. 
+		if(match.getStatus() != MatchStatus.FINISHED) {
+			try {
+				match.logout(session.getId());
+			} catch (JSONException e) {
+			}
+		}
+		
 		sessionsById.remove(session.getId());
 	}
 

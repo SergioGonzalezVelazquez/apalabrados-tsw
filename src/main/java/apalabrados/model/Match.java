@@ -313,6 +313,9 @@ public class Match {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			System.out.println("Excepción al enviar mensaje en rendirse al ganador");
+		} catch (IllegalStateException e) {
+			// TODO Auto-generated catch block
+			System.out.println("The WebSocket session [8f] has been closed");
 		}
 	}
 	
@@ -325,6 +328,9 @@ public class Match {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			System.out.println("Excepción al enviar mensaje en rendirse al perdedor");
+		}catch (IllegalStateException e) {
+			// TODO Auto-generated catch block
+			System.out.println("The WebSocket session [8f] has been closed");
 		}
 	}
 

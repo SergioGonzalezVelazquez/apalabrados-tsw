@@ -25,17 +25,18 @@ public class WSServer extends TextWebSocketHandler {
 		sessionsById.put(session.getId(), session);
 		User user = (User) session.getAttributes().get("user");
 		user.setWebSocketSession(session);
-		
-		Match match= (Match) session.getAttributes().get("match");
+
+		Match match = (Match) session.getAttributes().get("match");
 		System.out.println("match: ");
 		System.out.println(match.getId());
-		
+
 	}
-	
+
 	@Override
-	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception{
-		Match match= (Match) session.getAttributes().get("match");
-		match.logout(session.getId());		
+	public void afterConnectionClosed(WebSocketSession session, CloseStatus closeStatus) throws Exception {
+		Match match = (Match) session.getAttributes().get("match");
+		System.out.println(closeStatus.toString());
+		match.logout(session.getId());
 		sessionsById.remove(session.getId());
 	}
 
@@ -46,35 +47,40 @@ public class WSServer extends TextWebSocketHandler {
 		String type = jso.getString("type");
 		String idPartida = jso.getString("idPartida");
 		Match match = WebController.inPlayMatches.get(idPartida);
+		System.out.println(message.getPayload() + session.getId());
+		if (match != null) {
 
-		switch (type) {
-		case "INICIAR PARTIDA":
-			match.start();
-			break;
+			
+			switch (type) {
+			case "INICIAR PARTIDA":
+				match.start();
+				break;
 
-		case "MOVIMIENTO": // el jugador ha puesto letras
-			match.playerPlays(session.getId(), jso.getJSONArray("jugada"));
-			break;
-			
-		case "CONFIRMAR_JUGADA": //el jugador confirma la jugada después de la validación del servidor
-			match.acceptMovement(session.getId());
-			break;
-			
-		case "CAMBIO_LETRAS": // el jugador ha puesto letras
-			JSONArray arrJson = jso.getJSONArray("letters");
-			Character[] letters = new Character[arrJson.length()];
-			for (int i = 0; i < letters.length; i++) {
-				letters[i] = arrJson.getString(i).charAt(0);
+			case "MOVIMIENTO": // el jugador ha puesto letras
+				match.playerPlays(session.getId(), jso.getJSONArray("jugada"));
+
+				break;
+
+			case "CONFIRMAR_JUGADA": // el jugador confirma la jugada después de la validación del servidor
+				match.acceptMovement(session.getId());
+				break;
+
+			case "CAMBIO_LETRAS": // el jugador ha puesto letras
+				JSONArray arrJson = jso.getJSONArray("letters");
+				Character[] letters = new Character[arrJson.length()];
+				for (int i = 0; i < letters.length; i++) {
+					letters[i] = arrJson.getString(i).charAt(0);
+				}
+				match.changeLetters(session.getId(), letters);
+				break;
+			case "PASO_TURNO": // el jugador cambiar el turno
+				match.toggleTurn(session.getId());
+				break;
+			case "ABANDONO": // el jugador ha puesto letras
+				match.giveUp(session.getId());
+				break;
+
 			}
-			match.changeLetters(session.getId(), letters);
-			break;
-		case "PASO_TURNO": // el jugador cambiar el turno
-			match.toggleTurn(session.getId());
-			break;
-		case "ABANDONO": // el jugador ha puesto letras
-			match.giveUp(session.getId());
-			break;
-
 		}
 	}
 

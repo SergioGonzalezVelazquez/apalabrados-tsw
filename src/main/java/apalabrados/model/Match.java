@@ -71,7 +71,7 @@ public class Match {
 	private int pendingLetters;
 	@Transient
 	private MovementResult pendingMovement;
-
+	@Transient
 	private HashMap<String, Integer> letters;
 
 	public Match() {

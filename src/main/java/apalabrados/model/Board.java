@@ -196,6 +196,7 @@ public class Board implements LetterDistribution {
 			if (existeAdyacente(row, col))
 				return;
 		}
+		this.cancelarJugada(jugada);
 		throw new Exception("Fichas mal posicionadas");
 	}
 
@@ -220,8 +221,18 @@ public class Board implements LetterDistribution {
 
 	// Quita las letras del tablero hasta que el jugador confirme la jugada
 	public void quitarJugadaProvisional() throws JSONException {
-		for (int i = 0; i < this.jugadaPendiente.size(); i++) {
-			squares[this.jugadaPendiente.get(i).getInt("row")][jugadaPendiente.get(i).getInt("col")].setLetter('\0');
+		if(this.jugadaPendiente != null) {
+			for (int i = 0; i < this.jugadaPendiente.size(); i++) {
+				squares[this.jugadaPendiente.get(i).getInt("row")][jugadaPendiente.get(i).getInt("col")].setLetter('\0');
+			}
+		}
+	}
+	
+	private void cancelarJugada(List<JSONObject> jugada) throws JSONException {
+		JSONObject jsoCasilla;
+		for (int i = 0; i < jugada.size(); i++) {
+			jsoCasilla = jugada.get(i);
+			squares[jsoCasilla.getInt("row")][jsoCasilla.getInt("col")].setLetter('\0');
 		}
 	}
 
@@ -239,6 +250,8 @@ public class Board implements LetterDistribution {
 		if(!centroOcupado) {
 			centroOcupado = true;
 		}
+		
+		this.jugadaPendiente = null;
 	}
 
 	private void imprimirTablero() {
@@ -268,8 +281,10 @@ public class Board implements LetterDistribution {
 
 	private List<Cadena> primeraJugada(List<JSONObject> jugada) throws Exception {
 		boolean centroOcupadoProvisional = false;
-		if (jugada.size() <= 1)
+		if (jugada.size() <= 1) {
+			this.cancelarJugada(jugada);
 			throw new Exception("No puedes comenzar la partida con una sola letra");
+		}
 		JSONObject jsoCasilla;
 		for (int i = 0; i < jugada.size(); i++) {
 			jsoCasilla = jugada.get(i);
@@ -278,13 +293,17 @@ public class Board implements LetterDistribution {
 				break;
 			}
 		}
-		if (!centroOcupadoProvisional)
+		if (!centroOcupadoProvisional) {
+			this.cancelarJugada(jugada);
 			throw new Exception("Debes empezar en la casilla central");
+		}
 		Cadena cadena = getCadena(jugada);
 		ArrayList<Cadena> cadenas = new ArrayList<>();
 		cadenas.add(cadena);
 		return cadenas;
 	}
+	
+
 
 	private Cadena getCadena(List<JSONObject> jugada) throws JSONException {
 		Cadena cadena = new Cadena();
@@ -309,8 +328,11 @@ public class Board implements LetterDistribution {
 			enHorizontal = enHorizontal || jsoCasilla.getInt("row") == fila0;
 			enVertical = enVertical || jsoCasilla.getInt("col") == col0;
 		}
-		if (enHorizontal && enVertical)
+		if (enHorizontal && enVertical) {
+			this.cancelarJugada(jugada);
 			throw new Exception("Fichas mal posicionadas");
+		}
+
 		if (enHorizontal)
 			Collections.sort(jugada, new JugadaComparatorByColumn());
 		else

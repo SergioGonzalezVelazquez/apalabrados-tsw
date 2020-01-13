@@ -550,6 +550,10 @@
     font-size: 0.7em;
     line-height: 1.7em;
   }
+  .notification {
+	  width: 100vw!important;
+	  left: 0!important;
+	}
 }
 
 /*Media Query para tamaño tablet, se ha usado kidle fire*/
@@ -600,6 +604,10 @@
   .material-icons {
     font-size: 1.5em;
   }
+   .notification {
+	  width: 100vw!important;
+	  left: 0!important;
+	}	
 
 }
 
@@ -638,6 +646,7 @@
     font-size: 1em;
     line-height: 1.7em;
   }
+ 
 }
 
 
@@ -739,7 +748,7 @@
     https://codepen.io/hmps/pen/sCnbm
 -----------------------------------------------------------*/
 .notification {
-  width: 500px;
+  width: 400px;
   /* display: table; */
   left: 40%;
   top: 30%;

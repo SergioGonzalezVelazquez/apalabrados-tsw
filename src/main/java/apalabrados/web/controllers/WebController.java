@@ -1,6 +1,7 @@
 package apalabrados.web.controllers;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -40,6 +41,12 @@ import apalabrados.web.exceptions.InvalidTokenException;
 import apalabrados.model.Cadena;
 import apalabrados.model.Match;
 
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
+import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
+import com.google.api.client.http.javanet.NetHttpTransport;
+import com.google.api.client.json.jackson2.JacksonFactory;
+
 @RestController
 public class WebController {
 	@Autowired
@@ -50,31 +57,29 @@ public class WebController {
 	private PalabraRepository palabraRepo;
 	@Autowired
 	private MatchRepository matchRepo;
-	
+
 	private List<Match> pendingMatches = new ArrayList<>();
 	private EMailSenderService emailSender = new EMailSenderService();
 	public static ConcurrentHashMap<String, Match> inPlayMatches = new ConcurrentHashMap<>();
-	
-	//Flag utilizado para realizar test y que las letras devueltas no sean aleatorias
+
+	// Flag utilizado para realizar test y que las letras devueltas no sean
+	// aleatorias
 	private boolean TESTING = true;
-	
-	
+
 	@Autowired
 	public void loadPalabrasRepo() {
 		Manager.get().setPalabrasRepo(palabraRepo);
 	}
-	
+
 	@Autowired
 	public void loadMatchRepo() {
 		Manager.get().setMatchRepo(matchRepo);
 	}
-	
 
 	@RequestMapping("/signup")
 	public User signup(@RequestParam(value = "userName") String userName, @RequestParam(value = "email") String email,
-			@RequestParam(value = "pwd1") String pwd1,
-			@RequestParam(value = "pwd2") String pwd2) throws Exception {
-		
+			@RequestParam(value = "pwd1") String pwd1, @RequestParam(value = "pwd2") String pwd2) throws Exception {
+
 		if (pwd1 == null || pwd2 == null)
 			throw new Exception("Passwords could not be empty");
 		if (!pwd1.equals(pwd2))
@@ -85,8 +90,8 @@ public class WebController {
 		User user = new User();
 		user.setEmail(email);
 		user.setUserName(userName);
-		
-		//Encrypt password with SHA-1
+
+		// Encrypt password with SHA-1
 		String pwdEncrypt = DigestUtils.sha1Hex(pwd1);
 		user.setPwd(pwdEncrypt);
 
@@ -104,21 +109,51 @@ public class WebController {
 		if (user != null && user.getPwd().equals(pwdEncrypt)) {
 			session.setAttribute("user", user);
 			return user;
-		}
-		else
+		} else
 			throw new LoginException();
 	}
 
 	@RequestMapping("/loginWithGoogle")
-	public User loginWithGoogle(HttpSession session, @RequestParam(value = "userName") String userName, 
-			@RequestParam(value = "email") String email) throws LoginException {
-		User user= new User();
-		user.setEmail(email);
-		user.setUserName(userName);
+	public User loginWithGoogle(HttpSession session, @RequestParam(value = "id_token") String idTokenString)
+			throws Exception {
+		// Utilizado para autenticar cuenta google
+		JacksonFactory jacksonFactory = new JacksonFactory();
+		GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), jacksonFactory)
+				// Specify the CLIENT_ID of the app that accesses the backend:
+				.setAudience(Collections
+						.singletonList("283528331959-6hurgg9as7kjcpa15b3itieeer0gap5f.apps.googleusercontent.com"))
+				// Or, if multiple clients access the backend:
+				// .setAudience(Arrays.asList(CLIENT_ID_1, CLIENT_ID_2, CLIENT_ID_3))
+				.build();
+
+		// (Receive idTokenString by HTTPS POST)
+		User user = new User();
+		boolean valido = true;
+		GoogleIdToken idToken = verifier.verify(idTokenString);
+		if (idToken != null) {
+			Payload payload = idToken.getPayload();
+
+			// Print user identifier
+			String userId = payload.getSubject();
+			System.out.println("User ID: " + userId);
+
+			boolean emailVerified = Boolean.valueOf(payload.getEmailVerified());
+			// Get profile information from payload
+			if (emailVerified) {
+				user.setEmail(payload.getEmail());
+				user.setUserName((String) payload.get("name"));
+			} else {
+				throw new Exception("Email no verificado por Google");
+			}
+		} else {
+
+			throw new Exception("Token incorrecto");
+		}
+
 		// Si no está en la bbdd guarda el mail y el nick
-		if (userRepo.findByEmail(email) == null) 
+		if (userRepo.findByEmail(user.getEmail()) == null)
 			userRepo.save(user);
-		
+
 		session.setAttribute("user", user);
 		return user;
 	}
@@ -132,26 +167,26 @@ public class WebController {
 	public String createMatch(HttpSession session) throws Exception {
 		if (session.getAttribute("user") == null)
 			throw new Exception("Identifícate antes de jugar");
-		
+
 		User user = (User) session.getAttribute("user");
 		Match match = new Match();
-		
+
 		if (this.TESTING) {
 			match.setTesting(true);
 		}
-		
+
 		match.setPlayerA(user);
 		session.setAttribute("match", match);
 		this.pendingMatches.add(match);
 		JSONObject jso = new JSONObject();
 		jso.put("type", "PARTIDA CREADA");
 		jso.put("idPartida", match.getId());
-		
+
 		matchRepo.save(match);
-		
+
 		return jso.toString();
 	}
-	
+
 	@GetMapping("/matches")
 	public String getMatches(HttpSession session) throws Exception {
 		JSONObject jsoResponse = new JSONObject();
@@ -162,8 +197,8 @@ public class WebController {
 
 		User user = (User) session.getAttribute("user");
 		List<Match> matches = matchRepo.findByPlayerA(user);
-		
-		//Partidas creadas por el usuario (es el player A)
+
+		// Partidas creadas por el usuario (es el player A)
 		for (Match match : matches) {
 			jsoMatch = new JSONObject();
 			jsoMatch.put("status", match.getStatus());
@@ -174,8 +209,8 @@ public class WebController {
 		}
 
 		matches = matchRepo.findByPlayerB(user);
-		
-		//Partidas a las que se ha unido (es el player B)
+
+		// Partidas a las que se ha unido (es el player B)
 		for (Match match : matches) {
 			jsoMatch = new JSONObject();
 			jsoMatch.put("status", match.getStatus());
@@ -184,11 +219,10 @@ public class WebController {
 			jsoMatch.put("created", match.getCreated());
 			jsa.put(jsoMatch);
 		}
-		
+
 		jsoResponse.put("matches", jsa);
 		return jsoResponse.toString();
 	}
-
 
 	@PostMapping("/joinMatch")
 	public String joinMatch(HttpSession session) throws Exception {
@@ -199,7 +233,7 @@ public class WebController {
 
 		if (this.pendingMatches.isEmpty())
 			throw new Exception("No hay partidas pendientes. Crea una.");
-				
+
 		Match match = this.pendingMatches.remove(0);
 		match.setPlayerB(user);
 		session.setAttribute("match", match);
@@ -207,60 +241,60 @@ public class WebController {
 		JSONObject jso = new JSONObject();
 		jso.put("type", "PARTIDA LISTA");
 		jso.put("idPartida", match.getId());
-		
+
 		matchRepo.save(match);
-		
+
 		return jso.toString();
 	}
-	
+
 	@PostMapping("requestToken")
 	public void solicitarToken(@RequestParam String email) throws MessagingException {
 		User user;
 		user = userRepo.findByEmail(email);
-		if(user!= null) {
+		if (user != null) {
 			Token token = new Token(email);
 			tokenRepo.save(token);
-			
+
 			this.emailSender.enviarPorGmail(email, token.getToken());
 		}
 	}
-	
+
 	@PostMapping("updatePwd")
-	public void actualizarPwd(@RequestParam String code, @RequestParam String pwd1, @RequestParam String pwd2) throws Exception {
-		if(!pwd1.equals(pwd2)) {
-			throw new Exception("...") ;
+	public void actualizarPwd(@RequestParam String code, @RequestParam String pwd1, @RequestParam String pwd2)
+			throws Exception {
+		if (!pwd1.equals(pwd2)) {
+			throw new Exception("...");
 		}
 		Optional<Token> optToken = tokenRepo.findById(code);
-		if(optToken.isPresent()) {
+		if (optToken.isPresent()) {
 			Token token = optToken.get();
-			if(token.isCaducado()) {
+			if (token.isCaducado()) {
 				throw new InvalidTokenException();
 			}
 			User user = userRepo.findByEmail(token.getEmail());
 			String pwdEncrypt = DigestUtils.sha1Hex(pwd1);
 			user.setPwd(pwdEncrypt);
 			userRepo.save(user);
-		}		
+		}
 	}
-	
+
 	/*
 	 * Endpoint use to check if token is valid*
 	 */
 	@PostMapping("validateToken")
 	public ResponseEntity<String> validateToken(@RequestParam String code) throws Exception {
 		Optional<Token> optToken = tokenRepo.findById(code);
-		if(optToken.isPresent()) {
+		if (optToken.isPresent()) {
 			Token token = optToken.get();
-			if(token.isCaducado()) {
+			if (token.isCaducado()) {
 				throw new InvalidTokenException();
 			}
-			return ResponseEntity.ok().build();	
-		}
-		else {
+			return ResponseEntity.ok().build();
+		} else {
 			throw new InvalidTokenException();
-		}		
+		}
 	}
-	
+
 	@PostMapping("/updatePhoto")
 	public ResponseEntity<String> updatePhoto(HttpSession session, @RequestParam String base64Image) throws Exception {
 		if (session.getAttribute("user") == null)
@@ -268,26 +302,28 @@ public class WebController {
 
 		User user = (User) session.getAttribute("user");
 
-		//Los datos recibidos deben ser de la forma data:image/[png|jpg|...];base64,.....
-		//Primero comprobamos que la primera parte es de la forma data:image/[png|jpg|...]
+		// Los datos recibidos deben ser de la forma
+		// data:image/[png|jpg|...];base64,.....
+		// Primero comprobamos que la primera parte es de la forma
+		// data:image/[png|jpg|...]
 		Pattern patron = Pattern.compile("^data:image\\/[a-z1-9]+;base64,");
 		Matcher matcher = patron.matcher(base64Image);
-		if(!matcher.find()) {
+		if (!matcher.find()) {
 			throw new Exception("Entrada de archivo no válida");
 		}
-		
-		//Después cogemos la parte base64
+
+		// Después cogemos la parte base64
 		String bytes = base64Image.split(",")[1];
-		
-		if(!Base64.isBase64(bytes)) {
+
+		if (!Base64.isBase64(bytes)) {
 			throw new Exception("Entrada de archivo no válida");
 		}
-		
+
 		byte[] encoded = Base64.encodeBase64(base64Image.getBytes());
 		user.setPhoto(encoded);
 		userRepo.save(user);
-		
-		return ResponseEntity.ok().build();	
+
+		return ResponseEntity.ok().build();
 	}
 
 	@ExceptionHandler(Exception.class)

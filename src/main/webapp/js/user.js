@@ -127,20 +127,17 @@ window.onload = function() {
 }
 
 var user = new UserViewModel();
+var photoURL;
 ko.applyBindings(user);
 //Metodo para recoger el login correcto con google, y guardar el correo en la bbdd
 function onSignIn(googleUser) {
 
 	var profile = googleUser.getBasicProfile();
 	console.log("login OK");
-	var user = {
-		"email": profile.getEmail(),
-		"userName": profile.getName(),
-		"photo": profile.getImageUrl()
-	}
+	photoURL= profile.getImageUrl();
+	
 	var info = {
-			email: profile.getEmail(),
-			userName: profile.getName(),
+			id_token: googleUser.getAuthResponse().id_token
 		};
 		var data = {
 			data: info,
@@ -150,11 +147,18 @@ function onSignIn(googleUser) {
 		};
 	$.ajax(data);
 	
-	sessionStorage.setItem("user", JSON.stringify(user));
-	window.location = "http://localhost:8080/game.html";
 }
 function singupOKGoogle(response) {
-	console.log("Autenticado correctamente" +response.responseJSON.message);
+	console.log("login OK")
+	console.log(response)
+	var user = {
+		"email": response.email,
+		"userName": response.userName,
+		"photo": photoURL
+	}
+	sessionStorage.setItem("user", JSON.stringify(user));
+	
+	window.location.href = "game.html";
 }
 
 function logoutOKGoogle() {
@@ -163,7 +167,7 @@ function logoutOKGoogle() {
 			auth2.signOut().then(function () {
 		    	console.log('User signed out Google.');
 		    	sessionStorage.clear();
-		        window.location = "http://localhost:8080/index.html";
+		    	window.location.href = "index.html";
 		        console.log("Logout OK");
 	    	});
 }

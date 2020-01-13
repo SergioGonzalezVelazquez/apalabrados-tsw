@@ -116,7 +116,7 @@ function GameViewModel(user) {
         self.showMatchesDialog(false);
     }
     this.getMatches = function () {
-        
+
         var data = {
             url: "/matches",
             type: "get",
@@ -210,11 +210,11 @@ function GameViewModel(user) {
      * Cambio de letras
      ***********************************/
 
-    //Este array contiene las letras que se marcan para ser cambiadas 
+    //Este array contiene las letras que se marcan para ser cambiadas
     //cuando se abre el popup para seleccionar letras. Lo que se guarda en él no
     //es la letra, sino la posición de la letra dentro del panel. Lo hacemos
-    //así para evitar problemas cuando hay varias letras iguales y solo se quiere 
-    //cambiar una de ellas. 
+    //así para evitar problemas cuando hay varias letras iguales y solo se quiere
+    //cambiar una de ellas.
     this.lettersToChange = ko.observableArray();
 
     this.cambiarLetrasCancel = function () {
@@ -355,7 +355,7 @@ function GameViewModel(user) {
                 drop: function (event, ui) {
                     /*
                     // Metodo para comparar si la ficha tiene el atributo onboard
-                    // si tiene elatributo on board se revisa la posicion que tenia 
+                    // si tiene elatributo on board se revisa la posicion que tenia
                     // y se elimina de casillas jugadas para añadir la nueva posicion
                     if (ui.draggable.hasClass('onboard')) {
                         var row = ui.draggable.id.split(",")[1];
@@ -379,7 +379,7 @@ function GameViewModel(user) {
 
                         //Para obtener la letra que se ha soltado sobre el tablero, utilizo event.toElement, con
                         //el que se tiene acceso a la imagen de la letra. A partir de ahí, proceso el atributo src
-                        //para obtener la letra. 
+                        //para obtener la letra.
                         var letter = event.toElement.src.split("/");
                         letter = letter[letter.length - 1].split(".")[0];
 
@@ -408,7 +408,7 @@ function GameViewModel(user) {
     /***********************************
      * Sortable
      ***********************************/
-    //Permite reordenar las fichas en el panel 
+    //Permite reordenar las fichas en el panel
     //utilizando drag and drop
     //https://jqueryui.com/sortable/
     //http://www.knockmeout.net/2011/05/dragging-dropping-and-sorting-with.html
@@ -590,7 +590,7 @@ function GameViewModel(user) {
             console.log("Mensaje recibido del tipo: " + jso.type);
             console.log(JSON.stringify(jso))
 
-            //Inicio de partida 
+            //Inicio de partida
             if (jso.type == "START") {
                 console.log("start")
                 self.shouldShowBoard(true);
@@ -676,15 +676,15 @@ function GameViewModel(user) {
                         });
                         self.displayNotification("notification-warning", "Esta jugada tiene algunos problemas: " + problems);
                     }
-                } 
+                }
 
-                //La respuesta no tiene excepciones. 
+                //La respuesta no tiene excepciones.
                 else {
                     self.player1().turn(false);
                     self.player2().turn(true);
                     self.player1().score(jso.score);
                     self.tablero().availablePieces(jso.availablePieces);
-                    
+
                     //Al menos se ha jugado una palabra... (no ha sido un "pasar")
                     if (jso.valid && jso.valid.length > 0) {
                         var timestamp = new Date();
@@ -713,9 +713,9 @@ function GameViewModel(user) {
                                 self.tablero().panel.push(new Ficha(ko, letters[i], false));
                             }
                         }
-                    } 
-                    
-                    //El jugador ha pasado su turno. 
+                    }
+
+                    //El jugador ha pasado su turno.
                     else {
                         var timestamp = new Date();
                         self.movementHistory.unshift("[" + addZero(timestamp.getHours()) + ":" + addZero(timestamp.getMinutes()) + ":" +
@@ -757,6 +757,7 @@ function GameViewModel(user) {
 
                 //Launch timer
                 self.launchCountdown();
+                PlaySound("turno");
             }
 
             //El jugador recibe nuevas letras después de solicitarlo
@@ -846,7 +847,7 @@ function GameViewModel(user) {
 
     /**
      * Panel de botones: MEZCLAR
-     * Si el jugador desea que su cliente reeordene aleatoriamente las letras que 
+     * Si el jugador desea que su cliente reeordene aleatoriamente las letras que
      * tiene en su panel
      */
     this.mezclar = function () {
@@ -912,7 +913,7 @@ function GameViewModel(user) {
             console.log("no tienes el turno")
         }
     }
-    
+
     /**
      * Panel de botones: PASAR
      * Pasar el turno al siguiente jugador
@@ -932,7 +933,7 @@ function GameViewModel(user) {
 
     /**
      * Panel de botones: CAMBIAR LETRAS
-     * 
+     *
      */
     this.cambiar = function () {
         self.showDialogCambioLetras(true)
@@ -954,16 +955,16 @@ function GameViewModel(user) {
 
 
 /**
- * 
+ *
  */
 class Player {
 
     /**
      * Constructor de la clase Player
-     * @param ko 
-     * @param name 
-     * @param email 
-     * @param photo 
+     * @param ko
+     * @param name
+     * @param email
+     * @param photo
      */
     constructor(ko, name = null, email = null, photo = null) {
         if (name) {
@@ -985,7 +986,7 @@ class Player {
 
 /**
  * Clase Tablero
- * 
+ *
  */
 class Tablero {
     constructor(ko) {
@@ -1134,7 +1135,7 @@ class Casilla {
  */
 class Ficha {
     constructor(ko, letra, inTablero) {
-        //Index es necesario para hacer el binding con el elemento HTML en cambio de letras 
+        //Index es necesario para hacer el binding con el elemento HTML en cambio de letras
         //this.index = ko.observable(index);
         this.inTablero = ko.observable(inTablero);
         this.letter = ko.observable(letra);
@@ -1175,7 +1176,7 @@ function addZero(i) {
 
 /**
  * https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
- * 
+ *
  * Fisher-Yates (aka Knuth) Shuffle
  */
 function shuffleArray(array) {
@@ -1196,4 +1197,9 @@ function shuffleArray(array) {
     }
 
     return array;
+}
+
+function PlaySound(soundObj) {
+	  var sound = document.getElementById(soundObj);
+	  sound.play();
 }

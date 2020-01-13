@@ -19,9 +19,6 @@ function GameViewModel(user) {
 
     //Tablero
     this.tablero = ko.observable(new Tablero(ko));
-    console.log("tablero:")
-    console.log(self.tablero().casillas())
-
 
     //Controller for Popups
     this.shouldShowPopup = ko.observable(false);
@@ -161,7 +158,6 @@ function GameViewModel(user) {
         reader.onloadend = function (onloadend_e) {
             var result = reader.result;
             self.photoEncoded(result);
-            console.log(result)
         };
 
         if (file) {
@@ -228,9 +224,6 @@ function GameViewModel(user) {
         self.lettersToChange().forEach(function (ficha) {
             letters.push(ficha.letter());
         });
-
-        console.log("letras a cambiar:");
-        console.log(letters)
 
         var mensaje = {
             type: "CAMBIO_LETRAS",
@@ -417,7 +410,6 @@ function GameViewModel(user) {
             var list = valueAccessor();
             $(element).sortable({
                 update: function (event, ui) {
-                    console.log("update")
                     //retrieve our actual data item
                     var item = ui.item.tmplItem().data;
                     //figure out its new position
@@ -480,7 +472,6 @@ function GameViewModel(user) {
     	}
         sessionStorage.clear();
         window.location.href = "index.html";
-        console.log("Logout OK")
     }
 
     function logoutError(response) {
@@ -559,12 +550,8 @@ function GameViewModel(user) {
             sessionStorage.idPartida = response.idPartida;
 
         self.ws.onopen = function (event) {
-            console.log("on open");
             var jso = event.data;
-            console.log(event.data)
-            console.log(jso);
             if (response.type == "PARTIDA LISTA") {
-                console.log("partida lista")
                 var mensaje = {
                     type: "INICIAR PARTIDA",
                     idPartida: response.idPartida
@@ -592,7 +579,6 @@ function GameViewModel(user) {
 
             //Inicio de partida
             if (jso.type == "START") {
-                console.log("start")
                 self.shouldShowBoard(true);
                 self.isLoadingGame(false);
                 self.player1().turn(jso.turn)
@@ -640,7 +626,6 @@ function GameViewModel(user) {
 
                     self.displayNotification("notification-warning", `Algunas de las palabras no están aceptadas: ${strInvalids}`);
                 } else {
-                    console.log("todas validas")
                     //Preparar dialógo confirmar jugada
                     var score = 0;
                     self.resultadoJugada(new ResultadoJugada(ko));
@@ -700,8 +685,6 @@ function GameViewModel(user) {
                         //Vaciar casillas jugadas y quitar del panel
                         for (var i = 0; i < self.tablero().casillasJugadas().length; i++) {
                             self.tablero().panel.remove(self.tablero().casillasJugadas()[i].ficha());
-                            console.log(self.tablero().casillasJugadas()[i].letter());
-                            console.log("panel con " + self.tablero().panel().length + " letras")
                         }
                         self.tablero().casillasJugadas.removeAll();
 
@@ -780,7 +763,6 @@ function GameViewModel(user) {
 
             //Fin de la partida
             else if (jso.type == "MATCH_END") {
-                console.log("match end")
                 if (jso.winner) {
                     self.displayDialogWinner();
                 } else {
@@ -887,10 +869,7 @@ function GameViewModel(user) {
                     idPartida: sessionStorage.getItem('idPartida'),
                     jugada: []
                 };
-                console.log(self.tablero().casillasJugadas())
                 self.tablero().casillasJugadas().forEach(function (element) {
-                    console.log("(" + element.row + ", " + element.column);
-                    console.log("letra: " + element.ficha().letter());
                     var casilla = {
                         row: element.row,
                         col: element.column,
@@ -898,19 +877,13 @@ function GameViewModel(user) {
                     }
                     mensaje['jugada'].push(casilla);
                 });
-                console.log("Jugada: ")
-                console.log(JSON.stringify(mensaje))
-                self.ws.send(JSON.stringify(mensaje));
-
-                console.log(self.tablero().casillasJugadas())
+                self.ws.send(JSON.stringify(mensaje));)
             } else {
-                console.log("no hay movimiento")
                 self.displayNotification("notification-warning", `No has hecho ningún movimiento`);
             }
 
         } else {
             self.displayNotification("notification-warning", "No tienes el turno");
-            console.log("no tienes el turno")
         }
     }
 
@@ -944,7 +917,6 @@ function GameViewModel(user) {
      * Si un jugador se rinde se le da la partida por perdida.
      */
     this.abandonar = function () {
-        console.log("rendirse")
         var mensaje = {
             type: "ABANDONO",
             idPartida: sessionStorage.getItem('idPartida'),

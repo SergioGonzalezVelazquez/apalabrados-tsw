@@ -30,18 +30,17 @@ public class Board implements LetterDistribution {
 		this.initializeLetters();
 		this.createBoard();
 	}
-	
-	public Board (boolean testing) {
+
+	public Board(boolean testing) {
 		this.palabrasRepo = Manager.get().getPalabrasRepo();
-		if(testing) 
+		if (testing)
 			this.initializeTestingLetters();
 		else
 			this.initializeLetters();
-		
+
 		this.createBoard();
 	}
-	
-	
+
 	private void createBoard() {
 		// Crear las 255 casillas del tablero
 		for (int i = 0; i < 15; i++)
@@ -218,8 +217,8 @@ public class Board implements LetterDistribution {
 			cadena.calculatePoints();
 		}
 	}
-	
-	//Quita las letras del tablero hasta que el jugador confirme la jugada
+
+	// Quita las letras del tablero hasta que el jugador confirme la jugada
 	public void quitarJugadaProvisional() throws JSONException {
 		for (int i = 0; i < this.jugadaPendiente.size(); i++) {
 			squares[this.jugadaPendiente.get(i).getInt("row")][jugadaPendiente.get(i).getInt("col")].setLetter('\0');
@@ -231,10 +230,23 @@ public class Board implements LetterDistribution {
 			squares[jugadaPendiente.get(i).getInt("row")][jugadaPendiente.get(i).getInt("col")]
 					.setLetter(jugadaPendiente.get(i).getString("letter").charAt(0));
 		}
-		
+
 		for (int i = 0; i < this.cadenasPendientes.size(); i++) {
 			Cadena cadena = this.cadenasPendientes.get(i);
 			cadena.setProvisional(false);
+		}
+		
+		if(!centroOcupado) {
+			centroOcupado = true;
+		}
+	}
+
+	private void imprimirTablero() {
+		for (int x = 0; x < this.squares.length; x++) {
+			for (int y = 0; y < this.squares[x].length; y++) {
+				System.out.print(squares[x][y].getLetter() + " ");
+			}
+			System.out.println();
 		}
 	}
 
@@ -255,17 +267,18 @@ public class Board implements LetterDistribution {
 	}
 
 	private List<Cadena> primeraJugada(List<JSONObject> jugada) throws Exception {
+		boolean centroOcupadoProvisional = false;
 		if (jugada.size() <= 1)
 			throw new Exception("No puedes comenzar la partida con una sola letra");
 		JSONObject jsoCasilla;
 		for (int i = 0; i < jugada.size(); i++) {
 			jsoCasilla = jugada.get(i);
 			if (jsoCasilla.getInt("row") == 7 && jsoCasilla.getInt("col") == 7) {
-				centroOcupado = true;
+				centroOcupadoProvisional = true;
 				break;
 			}
 		}
-		if (!centroOcupado)
+		if (!centroOcupadoProvisional)
 			throw new Exception("Debes empezar en la casilla central");
 		Cadena cadena = getCadena(jugada);
 		ArrayList<Cadena> cadenas = new ArrayList<>();
@@ -317,10 +330,10 @@ public class Board implements LetterDistribution {
 		// Shuffle letras
 		Collections.shuffle(this.letters);
 	}
-	
+
 	private void initializeTestingLetters() {
-		
-		//Turno 1: Jugador A (ESCUDO)
+
+		// Turno 1: Jugador A (ESCUDO)
 		letters.add('S');
 		letters.add('C');
 		letters.add('O');
@@ -328,8 +341,8 @@ public class Board implements LetterDistribution {
 		letters.add('E');
 		letters.add('E');
 		letters.add('U');
-		
-		//Turno 2: Jugador B (CERA)
+
+		// Turno 2: Jugador B (CERA)
 		letters.add('R');
 		letters.add('E');
 		letters.add('A');
@@ -337,54 +350,49 @@ public class Board implements LetterDistribution {
 		letters.add('Ñ');
 		letters.add('O');
 		letters.add('P');
-		
-		//Turno 3: Jugador A recibe depués de ESCUDO (RETAN)
+
+		// Turno 3: Jugador A recibe depués de ESCUDO (RETAN)
 		letters.add('N');
 		letters.add('T');
 		letters.add('A');
 		letters.add('R');
 		letters.add('I');
 		letters.add('A');
-		
-		
-		//Turno 4: Jugador B recibe después de CERA (SALID)
+
+		// Turno 4: Jugador B recibe después de CERA (SALID)
 		letters.add('A');
 		letters.add('I');
 		letters.add('L');
-		
-		
-		//Turno 5: Jugador A recibe después de RETAN (AIRE)
+
+		// Turno 5: Jugador A recibe después de RETAN (AIRE)
 		letters.add('L');
 		letters.add('N');
 		letters.add('I');
 		letters.add('O');
 
-		
-		//Turno 6: Jugador B recibe después de SALID (PIÑA)
+		// Turno 6: Jugador B recibe después de SALID (PIÑA)
 		letters.add('I');
 		letters.add('A');
 		letters.add('E');
 		letters.add('A');
-		
-		//Turno 7: Jugador A recibe después de AIRE (SONIA)
+
+		// Turno 7: Jugador A recibe después de AIRE (SONIA)
 		letters.add('A');
 		letters.add('A');
 		letters.add('S');
-		
-		
-		//Turno 9: Jugador B recibe
+
+		// Turno 9: Jugador B recibe
 		letters.add('R');
 		letters.add('V');
 		letters.add('N');
-		
-	}
 
+	}
 
 	public String getLetters(int n) {
 		String r = "";
 		int i = 0;
-		
-		while (i<n && !this.letters.isEmpty()) {
+
+		while (i < n && !this.letters.isEmpty()) {
 			r = r + this.letters.remove(0) + " ";
 			i++;
 		}
@@ -396,19 +404,19 @@ public class Board implements LetterDistribution {
 
 		return r;
 	}
-	
+
 	public String changeLetters(Character[] letters) {
-		if(letters.length > this.availableLetters()) {
+		if (letters.length > this.availableLetters()) {
 			return "";
 		}
-		
+
 		// Devolver las letras del usuario al listado de letras
 		for (Character letter : letters) {
 			this.addLetter(letter);
 		}
-		
+
 		return this.getLetters(letters.length);
-		
+
 	}
 
 	public int availableLetters() {
@@ -424,7 +432,5 @@ public class Board implements LetterDistribution {
 	public void addLettersStart(ArrayList<Character> letters) {
 		this.letters.addAll(0, letters);
 	}
-	
-	
 
 }

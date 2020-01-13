@@ -877,7 +877,7 @@ function GameViewModel(user) {
                     }
                     mensaje['jugada'].push(casilla);
                 });
-                self.ws.send(JSON.stringify(mensaje));)
+                self.ws.send(JSON.stringify(mensaje));
             } else {
                 self.displayNotification("notification-warning", `No has hecho ningún movimiento`);
             }
@@ -1132,7 +1132,9 @@ if (!user) {
     window.location.href = "index.html";
 } else {
     var game = new GameViewModel(JSON.parse(user));
-    ko.applyBindings(game);
+    $(document).ready(function(){
+        ko.applyBindings(game);
+    });
 }
 
 
